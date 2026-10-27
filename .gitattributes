@@ -1,0 +1,5 @@
+# The server is Linux: keep LF in the repository and in checkouts.
+* text=auto eol=lf
+*.cmd text eol=crlf
+*.png binary
+*.jpg binary

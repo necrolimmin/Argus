@@ -1,0 +1,108 @@
+# Docker keeps container logs forever by default; each service gets at
+# most 3 files of 10 MB.
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+services:
+  db:
+    logging: *logging
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: argus
+      POSTGRES_USER: argus
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U argus -d argus"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  backend:
+    logging: *logging
+    build: ./backend
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      ARGUS_DATABASE_URL: postgresql+asyncpg://argus:${POSTGRES_PASSWORD}@db:5432/argus
+      ARGUS_MEDIA_DIR: /data/media
+      ARGUS_GO2RTC_URL: http://go2rtc:1984
+      ARGUS_GO2RTC_RTSP_URL: rtsp://go2rtc:8554
+      ARGUS_RECOGNIZER_URL: http://recognizer:8100
+      ARGUS_SCANNER_URL: http://host.docker.internal:8200
+      TZ: ${ARGUS_TIMEZONE:-Asia/Tashkent}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - media:/data/media
+    depends_on:
+      db:
+        condition: service_healthy
+
+  # Network discovery needs the host's network: multicast probes do not
+  # leave Docker's bridge network. Same image as the backend, no data.
+  scanner:
+    logging: *logging
+    build: ./backend
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      ARGUS_SERVICE_TOKEN: ${ARGUS_SERVICE_TOKEN}
+    command: ["uvicorn", "app.scanner_app:app", "--host", "0.0.0.0", "--port", "8200"]
+
+  go2rtc:
+    logging: *logging
+    image: alexxit/go2rtc:1.9.14
+    restart: unless-stopped
+    environment:
+      ARGUS_PUBLIC_HOST: ${ARGUS_PUBLIC_HOST}
+    # go2rtc writes streams added through its API (with camera passwords)
+    # back into its config, so it runs on a fresh working copy kept in a
+    # volume instead of the file from the repository.
+    entrypoint: ["sh", "-c", "cp /etc/argus/go2rtc.yaml /config/go2rtc.yaml && exec go2rtc -config /config/go2rtc.yaml"]
+    volumes:
+      - ./deploy/go2rtc.yaml:/etc/argus/go2rtc.yaml:ro
+      - go2rtc:/config
+    ports:
+      - "8555:8555/tcp"
+      - "8555:8555/udp"
+
+  recognizer:
+    logging: *logging
+    build: ./recognizer
+    restart: unless-stopped
+    environment:
+      ARGUS_BACKEND_URL: http://backend:8000
+      ARGUS_SERVICE_TOKEN: ${ARGUS_SERVICE_TOKEN}
+    volumes:
+      - models:/root/.insightface
+    depends_on:
+      - backend
+      - go2rtc
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+  frontend:
+    logging: *logging
+    build: ./frontend
+    restart: unless-stopped
+    ports:
+      - "${ARGUS_HTTP_PORT:-80}:80"
+    depends_on:
+      - backend
+
+volumes:
+  pgdata:
+  media:
+  models:
+  go2rtc:

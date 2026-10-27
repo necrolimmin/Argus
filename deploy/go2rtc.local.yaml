@@ -1,0 +1,15 @@
+# go2rtc for local development on one machine (browser on the same PC).
+#
+# Copy this file next to go2rtc.exe and run it from there: go2rtc writes
+# streams added through its API back into its config file, and those
+# contain camera passwords, which must not end up in the project.
+api:
+  listen: "127.0.0.1:1984"
+rtsp:
+  listen: "127.0.0.1:8554"
+webrtc:
+  listen: ":8555"
+  candidates:
+    - 127.0.0.1:8555
+log:
+  level: info

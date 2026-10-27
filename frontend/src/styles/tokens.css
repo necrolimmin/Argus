@@ -1,0 +1,66 @@
+/*
+ * Argus palette: the blue-grey steel of monitor housings, with signal
+ * colors used only where they carry meaning.
+ *   signal  — attention: selection, focus, primary action
+ *   entry   — a person coming in
+ *   exit    — a person going out
+ */
+:root,
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #16202a;
+  --panel: #1d2935;
+  --panel-raised: #243240;
+  --line: #2f3f4e;
+  --line-strong: #3d5163;
+  --text: #e1e7ed;
+  --muted: #8d9dad;
+  --signal: #f0b23e;
+  --signal-ink: #1d1503;
+  --signal-soft: rgba(240, 178, 62, 0.14);
+  --entry: #3cc4a0;
+  --exit: #ee7a5f;
+  --danger: #ef6a62;
+  --screen: #05080b; /* behind video; real black reads as "no picture" */
+  --overlay: rgba(6, 10, 14, 0.66);
+  --shadow: 0 18px 50px rgba(0, 0, 0, 0.45);
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+  --bg: #e6ebf0;
+  --panel: #f6f8fa;
+  --panel-raised: #ffffff;
+  --line: #cfd8e0;
+  --line-strong: #b4c1cc;
+  --text: #17222d;
+  --muted: #5a6a79;
+  --signal: #b9790b;
+  --signal-ink: #ffffff;
+  --signal-soft: rgba(185, 121, 11, 0.12);
+  --entry: #11866a;
+  --exit: #c14f34;
+  --danger: #c63c35;
+  --screen: #0d1319;
+  --overlay: rgba(6, 10, 14, 0.6);
+  --shadow: 0 18px 50px rgba(23, 34, 45, 0.18);
+}
+
+:root {
+  --font: "Golos Text", system-ui, sans-serif;
+  /* Dense working UI: 14px body, modest steps up. */
+  --fs-xs: 12px;
+  --fs-sm: 13px;
+  --fs-md: 14px;
+  --fs-lg: 16px;
+  --fs-xl: 20px;
+  --fs-2xl: 26px;
+
+  --r-sm: 4px;
+  --r-md: 7px;
+  --r-lg: 12px;
+
+  --rail: 256px;
+  --rail-collapsed: 60px;
+  --aside: 300px;
+}

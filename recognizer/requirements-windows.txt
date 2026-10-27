@@ -1,0 +1,11 @@
+# Windows: runs the face networks on any DirectX 12 GPU through DirectML.
+onnxruntime-directml==1.24.4
+numpy==1.26.4
+opencv-python-headless==4.10.0.84
+av==13.1.0
+pillow==11.0.0
+tzdata==2024.2
+fastapi==0.115.6
+uvicorn==0.32.1
+httpx==0.28.1
+python-multipart==0.0.19

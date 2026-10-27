@@ -1,0 +1,21 @@
+# Streams are not listed here: the backend registers every camera through
+# the API and re-syncs them every minute.
+
+api:
+  # Reached only by the backend inside the Docker network; not published.
+  listen: ":1984"
+
+rtsp:
+  # Restream used by the recognizer; not published.
+  listen: ":8554"
+
+webrtc:
+  listen: ":8555"
+  # Browsers connect to this address for video. ARGUS_PUBLIC_HOST must be
+  # the server's IP (or name) as seen from operators' computers.
+  candidates:
+    - ${ARGUS_PUBLIC_HOST}:8555
+    - stun:8555
+
+log:
+  level: info
