@@ -73,6 +73,8 @@ export function AddDeviceModal({ defaultUnitId, preset, onClose }: Props) {
     onSuccess: (res) => {
       setResult(res);
       setError("");
+      // The device told us its real RTSP port; keep it for saving.
+      if (res.rtsp_port) setPort(res.rtsp_port);
       if (!res.ok) return;
       const base = res.name || [res.model, meta.url ? "" : host.trim()].filter(Boolean).join(" ") || host.trim();
       setName((n) => n || base);

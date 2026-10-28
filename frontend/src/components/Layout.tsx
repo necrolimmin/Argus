@@ -25,7 +25,12 @@ import { PasswordModal } from "../pages/PasswordModal";
 export function Brand() {
   return (
     <div className="brand">
-      <span className="brand-mark" aria-hidden />
+      {/* Argus, the watchman of a hundred eyes: one eye, its iris and pupil. */}
+      <svg className="brand-mark" viewBox="0 0 24 24" fill="none" aria-hidden>
+        <path d="M1.75 12C5 6.25 19 6.25 22.25 12 19 17.75 5 17.75 1.75 12Z" stroke="currentColor" strokeWidth="1.75" strokeLinejoin="round" />
+        <circle cx="12" cy="12" r="3.9" stroke="currentColor" strokeWidth="1.75" />
+        <circle cx="12" cy="12" r="1.5" fill="currentColor" />
+      </svg>
       <span>Argus</span>
     </div>
   );

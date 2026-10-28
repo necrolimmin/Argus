@@ -38,7 +38,7 @@ export function ProbeSummary({ result }: { result: ProbeResult }) {
         {result.warnings.map((w) => (
           <p key={w} className="probe-warn">
             <Info size={15} />
-            {t(`devices.warnings.${w}`, { defaultValue: w })}
+            {t(`devices.warnings.${w}`, { defaultValue: w, port: result.rtsp_port })}
           </p>
         ))}
       </div>

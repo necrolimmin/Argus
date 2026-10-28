@@ -2,9 +2,10 @@ import { create } from "zustand";
 
 import type { User } from "../api/types";
 import { load, save } from "./storage";
+import { add, remove, type Slots, trim } from "./wall";
 
 type Theme = "dark" | "light";
-export type Layout = 1 | 4 | 9 | 16;
+export type Layout = "auto" | 1 | 4 | 9 | 16;
 
 interface AuthState {
   user: User | null;
@@ -64,12 +65,15 @@ export const useUi = create<UiState>((set, get) => ({
 /** What is on the Cameras screen; remembered per user between visits. */
 interface WallState {
   unitId: string | null;
-  cameraIds: string[];
+  /** Cells of the wall in order; see lib/wall.ts. */
+  cameraIds: Slots;
   layout: Layout;
   page: number;
   hydrate: (userId: string) => void;
   setUnit: (id: string | null) => void;
-  setCameras: (ids: string[]) => void;
+  setSlots: (slots: Slots) => void;
+  addCameras: (ids: string[]) => void;
+  removeCameras: (ids: string[]) => void;
   toggleCamera: (id: string) => void;
   setLayout: (layout: Layout) => void;
   setPage: (page: number) => void;
@@ -82,28 +86,30 @@ export const useWall = create<WallState>((set, get) => {
     const { unitId, cameraIds, layout } = get();
     save(wallKey, { unitId, cameraIds, layout });
   };
+  const setSlots = (cameraIds: Slots) => {
+    set({ cameraIds: trim(cameraIds) });
+    persist();
+  };
   return {
     unitId: null,
     cameraIds: [],
-    layout: 4,
+    layout: "auto",
     page: 0,
     hydrate: (userId) => {
       wallKey = `argus.wall.${userId}`;
-      const saved = load<{ unitId: string | null; cameraIds: string[]; layout: Layout } | null>(wallKey, null);
-      set({ unitId: saved?.unitId ?? null, cameraIds: saved?.cameraIds ?? [], layout: saved?.layout ?? 4, page: 0 });
+      const saved = load<{ unitId: string | null; cameraIds: Slots; layout: Layout } | null>(wallKey, null);
+      set({ unitId: saved?.unitId ?? null, cameraIds: saved?.cameraIds ?? [], layout: saved?.layout ?? "auto", page: 0 });
     },
     setUnit: (unitId) => {
       set({ unitId });
       persist();
     },
-    setCameras: (cameraIds) => {
-      set({ cameraIds, page: 0 });
-      persist();
-    },
+    setSlots,
+    addCameras: (ids) => setSlots(add(get().cameraIds, ids)),
+    removeCameras: (ids) => setSlots(remove(get().cameraIds, ids)),
     toggleCamera: (id) => {
-      const ids = get().cameraIds;
-      set({ cameraIds: ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id] });
-      persist();
+      const slots = get().cameraIds;
+      setSlots(slots.includes(id) ? remove(slots, [id]) : add(slots, [id]));
     },
     setLayout: (layout) => {
       set({ layout, page: 0 });

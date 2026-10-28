@@ -221,6 +221,7 @@ class ProbeOut(BaseModel):
     mac: str
     firmware: str
     codec: str
+    rtsp_port: int | None = None
     channels: list[ProbeChannelOut]
     snapshot: str | None  # data: URL
     warnings: list[str]

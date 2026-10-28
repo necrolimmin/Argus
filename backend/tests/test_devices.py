@@ -327,3 +327,37 @@ def test_rtsp_describe_with_digest():
     assert (good.ok, good.codec) == (True, "H265")
     assert (bad.ok, bad.error) == (False, "bad_credentials")
     assert (closed.ok, closed.error) == (False, "unreachable")
+
+
+def test_probe_uses_rtsp_port_reported_by_device(monkeypatch):
+    import asyncio
+
+    from app.models import CameraVendor
+    from app.services import probe as probe_mod
+    from app.services.rtsp import RtspCheck
+
+    async def fake_dahua(t, res):
+        res.channels = [ProbeChannel(channel=1), ProbeChannel(channel=2)]
+        res.kind = probe_mod.DeviceKind.recorder
+        res.rtsp_port = 554
+
+    urls = []
+
+    async def fake_describe(url, *a, **kw):
+        urls.append(url)
+        return RtspCheck(ok=":554/" in url, error="" if ":554/" in url else "rtsp_failed")
+
+    monkeypatch.setattr(probe_mod, "_dahua", fake_dahua)
+    monkeypatch.setattr(probe_mod.rtsp, "describe", fake_describe)
+    target = probe_mod.ProbeTarget(vendor=CameraVendor.dahua, host="10.0.0.9", rtsp_port=37777,
+                                   username="admin", password="x")
+    res = asyncio.run(probe_mod.probe(target))
+    assert res.ok and res.rtsp_port == 554 and "rtsp_port_fixed" in res.warnings
+
+    # Without the device saying otherwise, an SDK port gets a precise error.
+    async def silent_dahua(t, res):
+        res.channels = [ProbeChannel(channel=1)]
+
+    monkeypatch.setattr(probe_mod, "_dahua", silent_dahua)
+    res = asyncio.run(probe_mod.probe(target))
+    assert not res.ok and res.error == "rtsp_port_wrong"

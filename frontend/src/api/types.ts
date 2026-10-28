@@ -116,6 +116,7 @@ export interface ProbeResult {
   mac: string;
   firmware: string;
   codec: string;
+  rtsp_port: number | null;
   channels: ProbeChannel[];
   snapshot: string | null;
   warnings: string[];

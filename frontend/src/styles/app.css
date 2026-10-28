@@ -74,7 +74,7 @@ h3 {
   flex-direction: column;
   gap: 18px;
   padding: 14px 10px 12px;
-  background: var(--panel);
+  background: var(--bg);
   border-right: 1px solid var(--line);
   min-height: 0;
   /* Visible, so the user menu can open beside the rail. */
@@ -89,7 +89,7 @@ h3 {
   gap: 9px;
   font-size: var(--fs-lg);
   font-weight: 600;
-  letter-spacing: 0.02em;
+  letter-spacing: -0.01em;
   flex: none;
 }
 
@@ -98,21 +98,11 @@ h3 {
 }
 
 .brand-mark {
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  border: 2.5px solid var(--signal);
-  display: grid;
-  place-items: center;
+  width: 24px;
+  height: 24px;
+  color: var(--signal);
+  display: block;
   flex: none;
-}
-
-.brand-mark::after {
-  content: "";
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--signal);
 }
 
 .nav {
@@ -125,7 +115,7 @@ h3 {
   display: flex;
   align-items: center;
   gap: 12px;
-  height: 40px;
+  height: 38px;
   padding: 0 11px;
   border-radius: var(--r-md);
   color: var(--muted);
@@ -150,18 +140,11 @@ h3 {
 
 .nav a.active {
   color: var(--text);
-  background: var(--signal-soft);
 }
 
-.nav a.active::before {
-  content: "";
-  position: absolute;
-  left: -10px;
-  top: 8px;
-  bottom: 8px;
-  width: 3px;
-  border-radius: 0 3px 3px 0;
-  background: var(--signal);
+.nav a.active span {
+  padding-block: 3px;
+  box-shadow: inset 0 -1px 0 var(--signal);
 }
 
 .sidebar-tools {
@@ -183,10 +166,9 @@ h3 {
 
 .lang-switch {
   display: flex;
-  border: 1px solid var(--line);
-  border-radius: var(--r-md);
-  overflow: hidden;
+  gap: 4px;
   align-self: start;
+  padding-inline: 4px;
 }
 
 .lang-switch button {
@@ -200,9 +182,13 @@ h3 {
   cursor: pointer;
 }
 
-.lang-switch button[aria-pressed="true"] {
-  background: var(--panel-raised);
+.lang-switch button:hover {
   color: var(--text);
+}
+
+.lang-switch button[aria-pressed="true"] {
+  color: var(--text);
+  box-shadow: inset 0 -1px 0 var(--signal);
 }
 
 /* Collapsed: an icon rail. Labels and the brand name go, the language
@@ -226,8 +212,15 @@ h3 {
   padding: 0;
 }
 
-.nav-collapsed .nav a.active::before {
-  left: -8px;
+.nav-collapsed .nav a.active::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 6px;
+  width: 18px;
+  height: 1px;
+  translate: -50% 0;
+  background: var(--signal);
 }
 
 .nav-collapsed .lang-switch {
@@ -263,7 +256,8 @@ h3 {
 }
 
 .page-head h1 {
-  font-size: var(--fs-xl);
+  font-size: var(--fs-2xl);
+  letter-spacing: -0.02em;
 }
 
 .page-head .spacer {
@@ -278,10 +272,10 @@ h3 {
   justify-content: center;
   gap: 7px;
   height: 34px;
-  padding: 0 14px;
-  border-radius: var(--r-md);
+  padding: 0 16px;
+  border-radius: var(--r-pill);
   border: 1px solid var(--line-strong);
-  background: var(--panel-raised);
+  background: none;
   font-weight: 500;
   cursor: pointer;
   white-space: nowrap;
@@ -289,6 +283,7 @@ h3 {
 
 .btn:hover {
   border-color: var(--muted);
+  background: var(--panel-raised);
 }
 
 .btn:disabled {
@@ -297,14 +292,15 @@ h3 {
 }
 
 .btn-primary {
-  background: var(--signal);
-  border-color: var(--signal);
-  color: var(--signal-ink);
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--primary-ink);
 }
 
 .btn-primary:hover {
-  border-color: var(--signal);
-  filter: brightness(1.06);
+  background: var(--primary);
+  border-color: var(--primary);
+  opacity: 0.88;
 }
 
 .btn-ghost {
@@ -323,7 +319,7 @@ h3 {
 
 .btn-sm {
   height: 28px;
-  padding: 0 10px;
+  padding: 0 12px;
   font-size: var(--fs-sm);
 }
 
@@ -364,7 +360,6 @@ h3 {
 .select:focus {
   outline: none;
   border-color: var(--signal);
-  box-shadow: 0 0 0 3px var(--signal-soft);
 }
 
 .search {
@@ -432,20 +427,16 @@ h3 {
 
 .segmented {
   display: inline-flex;
-  padding: 2px;
-  gap: 2px;
-  border-radius: var(--r-md);
-  background: var(--bg);
-  border: 1px solid var(--line);
+  gap: 14px;
 }
 
 .segmented button {
   border: 0;
   background: none;
-  height: 28px;
-  min-width: 34px;
-  padding: 0 10px;
-  border-radius: 5px;
+  height: 32px;
+  min-width: 18px;
+  padding: 0 1px;
+  border-radius: 0;
   color: var(--muted);
   cursor: pointer;
   display: inline-flex;
@@ -454,10 +445,13 @@ h3 {
   gap: 6px;
 }
 
-.segmented button[aria-pressed="true"] {
-  background: var(--panel-raised);
+.segmented button:hover {
   color: var(--text);
-  box-shadow: 0 0 0 1px var(--line-strong);
+}
+
+.segmented button[aria-pressed="true"] {
+  color: var(--text);
+  box-shadow: inset 0 -1px 0 var(--signal);
 }
 
 .form-section {
@@ -501,9 +495,8 @@ h3 {
   background: var(--panel-raised);
 }
 
-.tree-row.active {
-  background: var(--signal-soft);
-  box-shadow: inset 2px 0 0 var(--signal);
+.tree-row.active .tree-name {
+  box-shadow: inset 0 -1px 0 var(--signal);
 }
 
 .tree-caret {
@@ -612,7 +605,7 @@ h3 {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 12px 14px 8px;
+  padding: 12px 16px 8px;
 }
 
 .aside-head h2 {
@@ -633,7 +626,7 @@ h3 {
 }
 
 .aside-note {
-  padding: 4px 14px 14px;
+  padding: 4px 16px 14px;
   color: var(--muted);
   font-size: var(--fs-sm);
 }
@@ -722,6 +715,19 @@ h3 {
   flex: 1;
 }
 
+.wall-toolbar h1 {
+  font-size: var(--fs-xl);
+  letter-spacing: -0.02em;
+}
+
+.wall-toolbar .scope {
+  color: var(--muted);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .grid-icon {
   display: grid;
   gap: 1.5px;
@@ -748,20 +754,14 @@ h3 {
   min-height: 0;
 }
 
-.grid[data-layout="1"] {
-  grid-template: 1fr / 1fr;
+/* Where a dragged camera will land. */
+.drop-target {
+  outline: 2px solid var(--signal);
+  outline-offset: -2px;
 }
 
-.grid[data-layout="4"] {
-  grid-template: repeat(2, minmax(0, 1fr)) / repeat(2, minmax(0, 1fr));
-}
-
-.grid[data-layout="9"] {
-  grid-template: repeat(3, minmax(0, 1fr)) / repeat(3, minmax(0, 1fr));
-}
-
-.grid[data-layout="16"] {
-  grid-template: repeat(4, minmax(0, 1fr)) / repeat(4, minmax(0, 1fr));
+.cam-item[draggable="true"] {
+  cursor: grab;
 }
 
 /*
@@ -819,6 +819,7 @@ h3 {
   align-items: center;
   gap: 8px;
   padding: 18px 10px 7px 12px;
+  /* A neutral scrim so the camera name reads over any picture. taste-skill-ignore */
   background: linear-gradient(transparent, rgba(0, 0, 0, 0.72));
   color: #f1f4f7;
   font-size: var(--fs-sm);
@@ -1422,9 +1423,7 @@ h3 {
   display: grid;
   place-items: center;
   padding: 24px 16px;
-  background:
-    radial-gradient(circle at 50% 38%, var(--signal-soft), transparent 46%),
-    var(--bg);
+  background: var(--bg);
 }
 
 .login-card {
@@ -1440,14 +1439,8 @@ h3 {
 }
 
 .login-card .brand-mark {
-  width: 30px;
-  height: 30px;
-  border-width: 3px;
-}
-
-.login-card .brand-mark::after {
-  width: 10px;
-  height: 10px;
+  width: 32px;
+  height: 32px;
 }
 
 .login-card h1 {
@@ -1510,13 +1503,15 @@ h3 {
     padding: 5px 6px;
   }
 
-  .nav a.active::before {
-    left: 8px;
-    right: 8px;
-    top: auto;
-    bottom: -7px;
-    width: auto;
-    height: 2px;
+  .nav a.active::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    bottom: 4px;
+    width: 18px;
+    height: 1px;
+    translate: -50% 0;
+    background: var(--signal);
   }
 
   .sidebar-tools,
@@ -1729,7 +1724,6 @@ h3 {
 .vendor-grid button[aria-pressed="true"] {
   color: var(--text);
   border-color: var(--signal);
-  background: var(--signal-soft);
 }
 
 .probe-ok,

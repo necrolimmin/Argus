@@ -1,5 +1,5 @@
 import { ScanFace, VideoOff, X } from "lucide-react";
-import { useEffect } from "react";
+import { type DragEvent, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 
@@ -11,17 +11,28 @@ interface TileProps {
   camera: Camera;
   quality: Quality;
   onOpen?: () => void;
+  /** Wall tiles can be dragged to another cell; the full-screen one cannot. */
+  onDragStart?: (e: DragEvent) => void;
+  onDragOver?: (e: DragEvent) => void;
+  onDragLeave?: () => void;
+  onDrop?: (e: DragEvent) => void;
+  dropTarget?: boolean;
 }
 
-export function CameraTile({ camera, quality, onOpen }: TileProps) {
+export function CameraTile({ camera, quality, onOpen, onDragStart, onDragOver, onDragLeave, onDrop, dropTarget }: TileProps) {
   const { t } = useTranslation();
   const { videoRef, state } = useCameraStream(camera.id, quality, camera.enabled);
   const status = !camera.enabled ? "disabled" : state;
 
   return (
     <div
-      className="tile"
+      className={`tile${dropTarget ? " drop-target" : ""}`}
       data-direction={camera.face_recognition ? camera.direction : "none"}
+      draggable={Boolean(onDragStart)}
+      onDragStart={onDragStart}
+      onDragOver={onDragOver}
+      onDragLeave={onDragLeave}
+      onDrop={onDrop}
       onDoubleClick={onOpen}
       onKeyDown={(e) => e.key === "Enter" && onOpen?.()}
       tabIndex={onOpen ? 0 : undefined}

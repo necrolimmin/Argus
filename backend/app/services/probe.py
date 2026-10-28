@@ -32,6 +32,8 @@ TEMPLATE_VENDORS = {
     CameraVendor.dvrip,
 }
 MAX_SNAPSHOT = 3 * 1024 * 1024
+# Vendor SDK / client ports that people often type instead of the RTSP one.
+SDK_PORTS = {8000, 37777, 37778, 34567}
 
 
 @dataclass
@@ -54,6 +56,8 @@ class ProbeResult:
     mac: str = ""
     firmware: str = ""
     codec: str = ""
+    # RTSP port as the device reports it; used when the typed one is wrong.
+    rtsp_port: int | None = None
     channels: list[ProbeChannel] = field(default_factory=list)
     snapshot: bytes | None = None
     # Non-fatal: e.g. the vendor API is closed but video works.
@@ -147,6 +151,13 @@ async def _hikvision(t: ProbeTarget, res: ProbeResult) -> None:
                 pass
 
         res.channels = [ProbeChannel(channel=n, name=names[n], ip=ips.get(n, "")) for n in sorted(names)]
+        try:
+            access = ET.fromstring((await _get(c, "/ISAPI/Security/adminAccesses")).content)
+            for proto in access.iter():
+                if proto.tag.endswith("}AdminAccessProtocol") and _x(proto, "protocol").upper() == "RTSP":
+                    res.rtsp_port = int(_x(proto, "portNo")) or None
+        except (_ApiError, ET.ParseError, ValueError):
+            pass
         first = res.channels[0].channel if res.channels else 1
         for path in (f"/ISAPI/Streaming/channels/{first}02/picture", f"/ISAPI/Streaming/channels/{first}01/picture"):
             try:
@@ -193,6 +204,11 @@ async def _dahua(t: ProbeTarget, res: ProbeResult) -> None:
         if any(x in (device_class + res.model).upper() for x in ("NVR", "DVR", "XVR", "HCVR")) or len(names) > 1:
             res.kind = DeviceKind.recorder
         res.channels = [ProbeChannel(channel=n, name=names[n]) for n in sorted(names)]
+        try:
+            rtsp_cfg = _kv((await _get(c, "/cgi-bin/configManager.cgi?action=getConfig&name=RTSP")).text)
+            res.rtsp_port = int(rtsp_cfg.get("table.RTSP.Port", "0").strip()) or None
+        except (_ApiError, ValueError):
+            pass
         first = res.channels[0].channel if res.channels else 1
         try:
             r = await _get(c, f"/cgi-bin/snapshot.cgi?channel={first}")
@@ -256,10 +272,10 @@ async def _tcp_open(host: str, port: int, timeout: float = 4) -> bool:
         return False
 
 
-def _stream_source(t: ProbeTarget, ch: ProbeChannel) -> str:
+def _stream_source(t: ProbeTarget, ch: ProbeChannel, port: int) -> str:
     if ch.rtsp_main:
         return with_credentials(ch.rtsp_main, t.username, t.password)
-    return template_url(t.vendor, t.host, t.rtsp_port, ch.channel, StreamQuality.main, t.username, t.password)
+    return template_url(t.vendor, t.host, port, ch.channel, StreamQuality.main, t.username, t.password)
 
 
 async def probe(t: ProbeTarget) -> ProbeResult:
@@ -310,7 +326,12 @@ async def probe(t: ProbeTarget) -> ProbeResult:
             if len(res.channels) > 1:
                 res.kind = DeviceKind.recorder
 
-    check = await rtsp.describe(_stream_source(t, res.channels[0]))
+    # The device knows its own RTSP port better than whoever typed it.
+    port = res.rtsp_port or t.rtsp_port
+    if port != t.rtsp_port:
+        res.warnings.append("rtsp_port_fixed")
+    res.rtsp_port = port
+    check = await rtsp.describe(_stream_source(t, res.channels[0], port))
     res.codec = check.codec
     if check.ok:
         res.ok = True
@@ -318,6 +339,8 @@ async def probe(t: ProbeTarget) -> ProbeResult:
         # The first recorder channel may simply have no camera plugged in.
         res.ok = True
         res.warnings.append("first_channel_empty")
+    elif check.error in ("rtsp_failed", "unreachable") and port in SDK_PORTS and not res.channels[0].rtsp_main:
+        res.error = "rtsp_port_wrong"
     else:
         res.error = check.error
     return res

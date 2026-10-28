@@ -52,6 +52,9 @@ export function OrgPage() {
 
   return (
     <div className="page">
+      <div className="page-head">
+        <h1>{t("nav.org")}</h1>
+      </div>
       <div className="split">
         <section className="card">
           <div className="card-head">

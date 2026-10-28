@@ -107,6 +107,7 @@ async def _probe_out(session: AsyncSession, res: ProbeResult, device: Device | N
         mac=res.mac,
         firmware=res.firmware,
         codec=res.codec,
+        rtsp_port=res.rtsp_port,
         channels=[
             ProbeChannelOut(
                 channel=c.channel,
@@ -233,7 +234,7 @@ async def bulk_create(body: BulkCreate, user: AdminUser, session: Session):
                 kind=res.kind,
                 vendor=t.vendor,
                 host=t.host,
-                rtsp_port=t.rtsp_port,
+                rtsp_port=res.rtsp_port or t.rtsp_port,
                 http_port=t.http_port,
                 org_unit_id=body.org_unit_id,
                 model=res.model,
@@ -489,12 +490,17 @@ async def sync_device(device_id: uuid.UUID, _: AdminUser, session: Session):
         dev.serial = res.serial or dev.serial
         dev.mac = res.mac or dev.mac
         dev.firmware = res.firmware or dev.firmware
+        port_changed = bool(res.rtsp_port) and res.rtsp_port != dev.rtsp_port
+        if port_changed:
+            dev.rtsp_port = res.rtsp_port
         if "api_unavailable" not in res.warnings and dev.vendor not in URL_VENDORS:
             listed = {c.channel for c in res.channels}
             for cam in dev.cameras:
                 cam.missing = cam.channel not in listed
         await session.commit()
         dev = await _load(session, device_id)
+        if port_changed:
+            await _register_all(dev)
     return await _probe_out(session, res, dev)
 
 

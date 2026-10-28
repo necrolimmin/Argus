@@ -1,5 +1,5 @@
 import { ChevronLeft, ChevronRight, ScanFace, Search, SquareDashed } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { type DragEvent, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useCameras, useUnits } from "../api/queries";
@@ -9,8 +9,12 @@ import { DirectionBadge } from "../components/DirectionBadge";
 import { EventsDock } from "../components/EventsDock";
 import { OrgTree } from "../components/OrgTree";
 import { type Layout, useWall } from "../lib/store";
+import { AUTO_MAX, autoGrid, compact, place, swap } from "../lib/wall";
 
-const LAYOUTS: Layout[] = [1, 4, 9, 16];
+const LAYOUTS: Exclude<Layout, "auto">[] = [1, 4, 9, 16];
+// What is being dragged onto a cell: another cell, or a camera from the list.
+const SLOT = "application/x-argus-slot";
+const CAMERA = "application/x-argus-camera";
 
 function GridIcon({ n }: { n: number }) {
   const side = Math.sqrt(n);
@@ -31,6 +35,7 @@ export function CamerasPage() {
   const all = useCameras(null);
   const [query, setQuery] = useState("");
   const [fullscreen, setFullscreen] = useState<Camera | null>(null);
+  const [dropTarget, setDropTarget] = useState<number | null>(null);
 
   const unitNames = useMemo(() => new Map(units.map((u) => [u.id, u.name])), [units]);
   const byId = useMemo(() => new Map((all.data ?? []).map((c) => [c.id, c])), [all.data]);
@@ -38,8 +43,8 @@ export function CamerasPage() {
   // Forget cameras that were deleted or are no longer visible to this user.
   useEffect(() => {
     if (!all.data) return;
-    const valid = wall.cameraIds.filter((id) => byId.has(id));
-    if (valid.length !== wall.cameraIds.length) wall.setCameras(valid);
+    if (wall.cameraIds.some((id) => id !== null && !byId.has(id)))
+      wall.setSlots(wall.cameraIds.map((id) => (id !== null && byId.has(id) ? id : null)));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [all.data]);
 
@@ -55,19 +60,50 @@ export function CamerasPage() {
     return q ? cams.filter((c) => c.name.toLowerCase().includes(q)) : cams;
   }, [unitList.data, query]);
 
-  const selected = wall.cameraIds.map((id) => byId.get(id)).filter((c): c is Camera => !!c);
-  const pages = Math.max(1, Math.ceil(selected.length / wall.layout));
-  const page = Math.min(wall.page, pages - 1);
-  const onScreen = selected.slice(page * wall.layout, (page + 1) * wall.layout);
+  const selected = compact(wall.cameraIds).map((id) => byId.get(id)).filter((c): c is Camera => !!c);
   const faceIds = selected.filter((c) => c.face_recognition).map((c) => c.id);
+
+  // Automatic mode packs the cameras and sizes the grid to their number;
+  // a fixed grid keeps each camera in the cell it was put in, gaps included.
+  const auto = wall.layout === "auto";
+  const slots = auto ? compact(wall.cameraIds) : wall.cameraIds;
+  const perPage = wall.layout === "auto" ? Math.min(Math.max(slots.length, 1), AUTO_MAX) : wall.layout;
+  const grid = auto ? autoGrid(perPage) : { cols: Math.sqrt(perPage), rows: Math.sqrt(perPage) };
+  const cellCount = grid.cols * grid.rows;
+  const pages = Math.max(1, Math.ceil(slots.length / perPage));
+  const page = Math.min(wall.page, pages - 1);
+  const first = page * perPage;
+  const cells = Array.from({ length: cellCount }, (_, i) => {
+    const id = i < perPage ? slots[first + i] : null;
+    return id ? byId.get(id) ?? null : null;
+  });
 
   const allListedSelected = listed.length > 0 && listed.every((c) => wall.cameraIds.includes(c.id));
   const toggleAll = () => {
-    const ids = new Set(wall.cameraIds);
-    if (allListedSelected) listed.forEach((c) => ids.delete(c.id));
-    else listed.forEach((c) => ids.add(c.id));
-    wall.setCameras([...ids]);
+    const ids = listed.map((c) => c.id);
+    if (allListedSelected) wall.removeCameras(ids);
+    else wall.addCameras(ids);
   };
+
+  const acceptsDrop = (e: DragEvent) => e.dataTransfer.types.includes(SLOT) || e.dataTransfer.types.includes(CAMERA);
+  const dropOn = (index: number) => ({
+    onDragOver: (e: DragEvent) => {
+      if (!acceptsDrop(e)) return;
+      e.preventDefault();
+      e.dataTransfer.dropEffect = "move";
+      setDropTarget(index);
+    },
+    onDragLeave: () => setDropTarget((t) => (t === index ? null : t)),
+    onDrop: (e: DragEvent) => {
+      e.preventDefault();
+      setDropTarget(null);
+      const target = first + index;
+      const from = e.dataTransfer.getData(SLOT);
+      const camera = e.dataTransfer.getData(CAMERA);
+      if (from !== "") wall.setSlots(swap(slots, Number(from), target));
+      else if (camera) wall.setSlots(place(slots, camera, target));
+    },
+  });
 
   return (
     <div className="wall-page">
@@ -108,7 +144,15 @@ export function CamerasPage() {
                   </p>
                 )}
                 {listed.map((c) => (
-                  <label key={c.id} className="cam-item">
+                  <label
+                    key={c.id}
+                    className="cam-item"
+                    draggable
+                    onDragStart={(e) => {
+                      e.dataTransfer.setData(CAMERA, c.id);
+                      e.dataTransfer.effectAllowed = "move";
+                    }}
+                  >
                     <input type="checkbox" checked={wall.cameraIds.includes(c.id)} onChange={() => wall.toggleCamera(c.id)} />
                     <span className="cam-item-text">
                       <span className="cam-item-name">{c.name}</span>
@@ -130,6 +174,8 @@ export function CamerasPage() {
 
       <section className="wall">
         <div className="wall-toolbar">
+          <h1>{t("nav.cameras")}</h1>
+          {wall.unitId && <span className="scope">{unitNames.get(wall.unitId)}</span>}
           <span className="muted">{t("cameras.selected", { count: selected.length })}</span>
           <span className="spacer" />
           {pages > 1 && (
@@ -144,6 +190,9 @@ export function CamerasPage() {
             </div>
           )}
           <div className="segmented" role="group" aria-label={t("cameras.layout")}>
+            <button aria-pressed={auto} onClick={() => wall.setLayout("auto")} title={t("cameras.autoHint")}>
+              {t("cameras.auto")}
+            </button>
             {LAYOUTS.map((n) => (
               <button key={n} aria-pressed={wall.layout === n} onClick={() => wall.setLayout(n)} title={`${Math.sqrt(n)}×${Math.sqrt(n)}`}>
                 <GridIcon n={n} />
@@ -154,17 +203,36 @@ export function CamerasPage() {
 
         <div className="wall-body">
           {selected.length === 0 ? (
-            <div className="empty center">
+            <div className={`empty center${dropTarget === 0 ? " drop-target" : ""}`} {...dropOn(0)}>
               <SquareDashed size={40} strokeWidth={1.4} />
               <span>{t("cameras.nothingSelected")}</span>
             </div>
           ) : (
-            <div className="grid" data-layout={wall.layout}>
-              {onScreen.map((c) => (
-                <CameraTile key={c.id} camera={c} quality={wall.layout === 1 ? "main" : "sub"} onOpen={() => setFullscreen(c)} />
-              ))}
-              {wall.layout > 1 &&
-                Array.from({ length: wall.layout - onScreen.length }, (_, i) => <div key={`empty-${i}`} className="tile empty-slot" />)}
+            <div
+              className="grid"
+              style={{
+                gridTemplateColumns: `repeat(${grid.cols}, minmax(0, 1fr))`,
+                gridTemplateRows: `repeat(${grid.rows}, minmax(0, 1fr))`,
+              }}
+            >
+              {cells.map((c, i) =>
+                c ? (
+                  <CameraTile
+                    key={c.id}
+                    camera={c}
+                    quality={cellCount === 1 ? "main" : "sub"}
+                    onOpen={() => setFullscreen(c)}
+                    dropTarget={dropTarget === i}
+                    onDragStart={(e) => {
+                      e.dataTransfer.setData(SLOT, String(first + i));
+                      e.dataTransfer.effectAllowed = "move";
+                    }}
+                    {...dropOn(i)}
+                  />
+                ) : (
+                  <div key={`empty-${i}`} className={`tile empty-slot${dropTarget === i ? " drop-target" : ""}`} {...dropOn(i)} />
+                ),
+              )}
             </div>
           )}
         </div>
