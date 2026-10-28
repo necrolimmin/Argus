@@ -278,9 +278,35 @@ def _stream_source(t: ProbeTarget, ch: ProbeChannel, port: int) -> str:
     return template_url(t.vendor, t.host, port, ch.channel, StreamQuality.main, t.username, t.password)
 
 
+# Default titles recorders give unused inputs; a channel someone named is
+# more likely to have a camera behind it.
+DEFAULT_TITLE = re.compile(r"^(channel|канал|camera|ipc|d|cam)\s*\d*$", re.I)
+MAX_EXTRA_CHANNELS = 8
+
+
+async def _first_live_channel(t: ProbeTarget, channels: list[ProbeChannel], port: int) -> rtsp.RtspCheck | None:
+    """Checks a few more channels, named ones first, three at a time.
+
+    Only called after the vendor API accepted the credentials, so the extra
+    logins cannot lock the account.
+    """
+    ordered = sorted(channels, key=lambda ch: bool(DEFAULT_TITLE.match(ch.name.strip())))[:MAX_EXTRA_CHANNELS]
+    limit = asyncio.Semaphore(3)
+
+    async def one(ch: ProbeChannel) -> rtsp.RtspCheck:
+        async with limit:
+            return await rtsp.describe(_stream_source(t, ch, port))
+
+    for check in await asyncio.gather(*(one(ch) for ch in ordered)):
+        if check.ok:
+            return check
+    return None
+
+
 async def probe(t: ProbeTarget) -> ProbeResult:
     res = ProbeResult()
     vendor = CameraVendor.rtsp if t.vendor == CameraVendor.other else t.vendor
+    api_verified = False  # the device's own API accepted the credentials
 
     if vendor in (CameraVendor.rtsp, CameraVendor.http):
         if not t.rtsp_main:
@@ -321,6 +347,7 @@ async def probe(t: ProbeTarget) -> ProbeResult:
         except (ET.ParseError, ValueError) as exc:
             log.info("probe %s: unexpected answer: %s", t.host, exc)
             res.warnings.append("api_unavailable")
+        api_verified = vendor != CameraVendor.ezviz and "api_unavailable" not in res.warnings
         if not res.channels:
             res.channels = [ProbeChannel(channel=n) for n in range(1, (t.channel_count or 1) + 1)]
             if len(res.channels) > 1:
@@ -332,6 +359,12 @@ async def probe(t: ProbeTarget) -> ProbeResult:
         res.warnings.append("rtsp_port_fixed")
     res.rtsp_port = port
     check = await rtsp.describe(_stream_source(t, res.channels[0], port))
+    if not check.ok and check.error == "rtsp_failed" and res.kind == DeviceKind.recorder and api_verified:
+        # A hybrid recorder may stay silent on an analogue input with no camera
+        # instead of answering 404, so look for a channel that does send video.
+        check = await _first_live_channel(t, res.channels[1:], port) or check
+        if check.ok:
+            res.warnings.append("first_channel_empty")
     res.codec = check.codec
     if check.ok:
         res.ok = True

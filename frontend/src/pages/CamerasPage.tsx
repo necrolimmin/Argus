@@ -78,6 +78,13 @@ export function CamerasPage() {
     return id ? byId.get(id) ?? null : null;
   });
 
+  // Never a second page while everything fits on the first: gaps that would
+  // push cameras over are dropped.
+  useEffect(() => {
+    if (slots.length > perPage && selected.length <= perPage) wall.setSlots(compact(wall.cameraIds));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [slots.length, perPage, selected.length]);
+
   const allListedSelected = listed.length > 0 && listed.every((c) => wall.cameraIds.includes(c.id));
   const toggleAll = () => {
     const ids = listed.map((c) => c.id);

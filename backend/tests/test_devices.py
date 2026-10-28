@@ -361,3 +361,41 @@ def test_probe_uses_rtsp_port_reported_by_device(monkeypatch):
     monkeypatch.setattr(probe_mod, "_dahua", silent_dahua)
     res = asyncio.run(probe_mod.probe(target))
     assert not res.ok and res.error == "rtsp_port_wrong"
+
+
+def test_probe_finds_a_live_channel_when_the_first_is_silent(monkeypatch):
+    import asyncio
+
+    from app.models import CameraVendor
+    from app.services import probe as probe_mod
+    from app.services.rtsp import RtspCheck
+
+    async def hybrid(t, res):
+        # Analogue inputs 1-8 with default titles, cameras on 11 and 12.
+        names = {n: f"Channel{n}" for n in range(1, 9)} | {9: "IPC", 10: "IPC", 11: "olmazor", 12: "olmazor"}
+        res.channels = [ProbeChannel(channel=n, name=v) for n, v in names.items()]
+        res.kind = probe_mod.DeviceKind.recorder
+
+    asked = []
+
+    async def describe(url, *a, **kw):
+        asked.append(url)
+        live = "channel=11&" in url or "channel=12&" in url
+        return RtspCheck(ok=live, error="" if live else "rtsp_failed", codec="H265" if live else "")
+
+    monkeypatch.setattr(probe_mod, "_dahua", hybrid)
+    monkeypatch.setattr(probe_mod.rtsp, "describe", describe)
+    target = probe_mod.ProbeTarget(vendor=CameraVendor.dahua, host="10.0.0.9", username="admin", password="x")
+    res = asyncio.run(probe_mod.probe(target))
+    assert res.ok and res.codec == "H265" and "first_channel_empty" in res.warnings
+    assert "channel=11&" in asked[1]  # named channels are tried first
+
+    # Without the API's word on the credentials, no extra logins are tried.
+    async def closed_api(t, res):
+        raise probe_mod._ApiError("api_failed")
+
+    asked.clear()
+    monkeypatch.setattr(probe_mod, "_dahua", closed_api)
+    target.channel_count = 12
+    res = asyncio.run(probe_mod.probe(target))
+    assert not res.ok and len(asked) == 1

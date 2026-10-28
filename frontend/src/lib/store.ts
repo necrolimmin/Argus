@@ -2,7 +2,7 @@ import { create } from "zustand";
 
 import type { User } from "../api/types";
 import { load, save } from "./storage";
-import { add, remove, type Slots, trim } from "./wall";
+import { add, compact, remove, type Slots, trim } from "./wall";
 
 type Theme = "dark" | "light";
 export type Layout = "auto" | 1 | 4 | 9 | 16;
@@ -111,8 +111,9 @@ export const useWall = create<WallState>((set, get) => {
       const slots = get().cameraIds;
       setSlots(slots.includes(id) ? remove(slots, [id]) : add(slots, [id]));
     },
+    // A new grid starts packed: gaps placed for the old grid mean nothing in it.
     setLayout: (layout) => {
-      set({ layout, page: 0 });
+      set({ layout, page: 0, cameraIds: compact(get().cameraIds) });
       persist();
     },
     setPage: (page) => set({ page }),
