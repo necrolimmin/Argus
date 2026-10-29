@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { ChevronDown, ChevronLeft, ChevronRight, ScanFace, Search, SquareDashed } from "lucide-react";
+import { ChevronLeft, ChevronRight, ScanFace, Search, SquareDashed } from "lucide-react";
 import { type CSSProperties, type DragEvent, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -9,8 +9,7 @@ import type { Camera } from "../api/types";
 import { CameraTile, FullscreenCamera } from "../components/CameraTile";
 import { DirectionBadge } from "../components/DirectionBadge";
 import { EventsDock } from "../components/EventsDock";
-import { OrgTree } from "../components/OrgTree";
-import { ListSkeleton } from "../components/States";
+import { UnitPicker } from "../components/UnitPicker";
 import { isAdmin, type Layout, useAuth, useWall } from "../lib/store";
 import { unitPath } from "../lib/tree";
 import { AUTO_MAX, bento, bentoCells, compact, place, swap } from "../lib/wall";
@@ -40,9 +39,6 @@ export function CamerasPage() {
   const [query, setQuery] = useState("");
   const [fullscreen, setFullscreen] = useState<Camera | null>(null);
   const [dropTarget, setDropTarget] = useState<number | null>(null);
-  // The structure is a compact picker over the camera list; it opens by
-  // itself only while no unit is chosen yet.
-  const [treeOpen, setTreeOpen] = useState(() => wall.unitId === null);
   const admin = isAdmin(useAuth((s) => s.user));
   // Device names and addresses tell cameras with the same name apart. The
   // device list is an administrator's; operators see unit and channel.
@@ -139,27 +135,15 @@ export function CamerasPage() {
   return (
     <div className="wall-page">
       <aside className="aside">
-        <section className="unit-pick">
-          <button className="unit-picker" aria-expanded={treeOpen} onClick={() => setTreeOpen((o) => !o)}>
-            <span className="unit-picker-label">{t("cameras.structure")}</span>
-            <span className="unit-picker-value">{scope || t("cameras.chooseUnit")}</span>
-            <ChevronDown size={16} aria-hidden className="unit-picker-caret" />
-          </button>
-          {treeOpen && (
-            <div className="unit-tree">
-              {unitsLoading && <ListSkeleton />}
-              <OrgTree
-                units={units}
-                selectedId={wall.unitId}
-                onSelect={(id) => {
-                  wall.setUnit(id);
-                  setTreeOpen(false);
-                }}
-                count="camera_count"
-              />
-            </div>
-          )}
-        </section>
+        <UnitPicker
+          units={units}
+          loading={unitsLoading}
+          selectedId={wall.unitId}
+          onSelect={(id) => id && wall.setUnit(id)}
+          count="camera_count"
+          placeholder={t("cameras.chooseUnit")}
+          defaultOpen={wall.unitId === null}
+        />
 
         <section className="aside-section">
           <div className="aside-head">
