@@ -8,10 +8,10 @@ import {
   Radar,
   RefreshCw,
   ScanFace,
+  Router,
   Search,
   Settings2,
   Trash2,
-  Video,
 } from "lucide-react";
 import { Fragment, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -22,6 +22,8 @@ import { keys, useDevices, useUnits } from "../api/queries";
 import type { Camera, Device, Vendor } from "../api/types";
 import { DirectionBadge } from "../components/DirectionBadge";
 import { Confirm } from "../components/Modal";
+import { type RowAction, RowActions } from "../components/RowActions";
+import { EmptyState, ErrorState, Skeleton } from "../components/States";
 import { intlLocale } from "../i18n";
 import { errorText } from "../lib/errors";
 import { isAdmin, useAuth, useUi } from "../lib/store";
@@ -55,7 +57,10 @@ export function DevicesPage() {
   const admin = isAdmin(useAuth((s) => s.user));
   const notify = useUi((s) => s.notify);
   const qc = useQueryClient();
-  const { data: devices = [], isSuccess } = useDevices();
+  const list = useDevices();
+  const devices = list.data ?? [];
+  // react-query keeps the last good data when a refresh fails.
+  const hasData = list.data !== undefined;
   const { data: units = [] } = useUnits();
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState<Status>("all");
@@ -74,10 +79,11 @@ export function DevicesPage() {
     let grew = true;
     while (grew) {
       grew = false;
-      for (const u of units) if (u.parent_id && below.has(u.parent_id) && !below.has(u.id)) {
-        below.add(u.id);
-        grew = true;
-      }
+      for (const u of units)
+        if (u.parent_id && below.has(u.parent_id) && !below.has(u.id)) {
+          below.add(u.id);
+          grew = true;
+        }
     }
     return (d: Device) => below.has(d.org_unit_id) || d.cameras.some((c) => below.has(c.org_unit_id));
   }, [unitId, units]);
@@ -130,6 +136,23 @@ export function DevicesPage() {
       return next;
     });
 
+  const filtered = query !== "" || status !== "all" || vendor !== "" || unitId !== "";
+  const resetFilters = () => {
+    setQuery("");
+    setStatus("all");
+    setVendor("");
+    setUnitId("");
+  };
+  const offline = devices.filter((d) => statusOf(d) === "offline").length;
+  const headers = [
+    t("devices.colName"),
+    t("devices.colType"),
+    t("devices.colModel"),
+    t("devices.colAddress"),
+    t("devices.colUnit"),
+    t("devices.colStatus"),
+  ];
+
   const lastSeen = (d: Device) =>
     d.last_seen_at
       ? t("devices.lastSeen", {
@@ -141,7 +164,7 @@ export function DevicesPage() {
     <div className="page">
       <div className="page-head">
         <h1>{t("devices.title")}</h1>
-        <span className="muted num">{devices.length}</span>
+        {hasData && <span className="muted num">{devices.length}</span>}
         <span className="spacer" />
         <button className="btn btn-ghost" onClick={() => setDialog({ kind: "creds" })}>
           <KeyRound size={16} />
@@ -165,7 +188,12 @@ export function DevicesPage() {
         <div className="filters">
           <div className="search grow-search">
             <Search size={15} />
-            <input className="input" placeholder={t("common.search")} value={query} onChange={(e) => setQuery(e.target.value)} />
+            <input
+              className="input"
+              placeholder={t("common.search")}
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+            />
           </div>
           <div className="segmented" role="group" aria-label={t("devices.colStatus")}>
             {(["all", "online", "offline", "unknown"] as Status[]).map((s) => (
@@ -195,22 +223,65 @@ export function DevicesPage() {
         </div>
       )}
 
+      {/* A failed refresh keeps the last good table and says so above it. */}
+      {list.isError && hasData && (
+        <div className="card table-alert">
+          <ErrorState
+            title={t("devices.loadFailed")}
+            lastOk={list.dataUpdatedAt}
+            onRetry={() => list.refetch()}
+            retrying={list.isFetching}
+          />
+        </div>
+      )}
+
       <div className="card">
-        {isSuccess && devices.length === 0 ? (
-          <div className="empty">
-            <Video size={36} strokeWidth={1.4} />
-            <span>{t("devices.empty")}</span>
-          </div>
-        ) : isSuccess && rows.length === 0 ? (
-          <div className="empty">
-            <span>{t("devices.noMatches")}</span>
-          </div>
+        {list.isPending ? (
+          <Skeleton rows={6} columns={[64, 96, 180, 96, 110, 72]} headers={headers} />
+        ) : list.isError && !hasData ? (
+          <ErrorState
+            title={t("devices.loadFailed")}
+            lastOk={list.dataUpdatedAt}
+            onRetry={() => list.refetch()}
+            retrying={list.isFetching}
+          />
+        ) : devices.length === 0 ? (
+          <EmptyState
+            icon={Router}
+            title={t("devices.empty")}
+            action={
+              <button className="btn btn-primary btn-sm" onClick={() => setDialog({ kind: "add" })}>
+                <Plus size={14} />
+                {t("devices.add")}
+              </button>
+            }
+          />
+        ) : rows.length === 0 ? (
+          <EmptyState
+            icon={Search}
+            title={t("devices.noMatches")}
+            action={
+              <button className="btn btn-sm" onClick={resetFilters}>
+                {t("states.resetFilters")}
+              </button>
+            }
+          />
         ) : (
           <div className="table-wrap">
             <table className="table devices-table">
+              <colgroup>
+                <col className="col-caret" />
+                <col className="col-name" />
+                <col className="col-type" />
+                <col className="col-model" />
+                <col className="col-address" />
+                <col className="col-unit" />
+                <col className="col-status" />
+                <col className="col-actions" />
+              </colgroup>
               <thead>
                 <tr>
-                  <th className="col-caret" />
+                  <th />
                   <th>{t("devices.colName")}</th>
                   <th>{t("devices.colType")}</th>
                   <th>{t("devices.colModel")}</th>
@@ -225,9 +296,14 @@ export function DevicesPage() {
                   const expanded = open.has(d.id);
                   const single = d.cameras.length === 1 && d.kind === "camera";
                   const st = statusOf(d);
+                  const path = unitPath(units, d.org_unit_id);
                   return (
                     <Fragment key={d.id}>
-                      <tr onClick={() => toggle(d.id)} aria-expanded={expanded}>
+                      <tr
+                        className={expanded ? "open" : undefined}
+                        onClick={() => toggle(d.id)}
+                        aria-expanded={expanded}
+                      >
                         <td>
                           <ChevronRight size={15} className={`caret${expanded ? " open" : ""}`} />
                         </td>
@@ -236,35 +312,51 @@ export function DevicesPage() {
                         </td>
                         <td className="muted">
                           {t(`devices.kind.${d.kind}`)}
-                          {d.kind === "recorder" && <span className="num">, {d.cameras.length}</span>}
+                          {d.kind === "recorder" && (
+                            <>
+                              , <span className="num">{d.cameras.length}</span>
+                            </>
+                          )}
                         </td>
-                        <td className="muted">{[t(`devices.vendors.${d.vendor}`), d.model].filter(Boolean).join(" ")}</td>
+                        <td className="muted cell-model">
+                          {t(`devices.vendors.${d.vendor}`)} {d.model && <span className="num">{d.model}</span>}
+                        </td>
                         <td className="num">{d.host}</td>
-                        <td className="muted">{unitPath(units, d.org_unit_id)}</td>
+                        {/* The unit itself; where it sits is in the tooltip. */}
+                        <td className="muted cell-unit" title={path}>
+                          {unitNames.get(d.org_unit_id)}
+                        </td>
                         <td title={lastSeen(d)}>
                           <span className={`status-dot ${st}`}>{t(`devices.status.${st}`)}</span>
                         </td>
-                        <td className="actions" onClick={(e) => e.stopPropagation()}>
-                          {single && (
-                            <button className="icon-btn sm" title={t("devices.camera.title")} aria-label={t("devices.camera.title")}
-                              onClick={() => setDialog({ kind: "camera", camera: d.cameras[0] })}>
-                              <Settings2 size={15} />
-                            </button>
-                          )}
-                          {d.kind === "recorder" && (
-                            <button className="icon-btn sm" title={t("devices.refreshChannels")} aria-label={t("devices.refreshChannels")}
-                              onClick={() => setDialog({ kind: "sync", device: d })}>
-                              <RefreshCw size={15} />
-                            </button>
-                          )}
-                          <button className="icon-btn sm" title={t("devices.editDevice")} aria-label={t("devices.editDevice")}
-                            onClick={() => setDialog({ kind: "device", device: d })}>
-                            <Pencil size={15} />
-                          </button>
-                          <button className="icon-btn sm danger" title={t("common.delete")} aria-label={t("common.delete")}
-                            onClick={() => setDialog({ kind: "deleteDevice", device: d })}>
-                            <Trash2 size={15} />
-                          </button>
+                        <td className="actions">
+                          <RowActions
+                            actions={
+                              [
+                                single && {
+                                  icon: Settings2,
+                                  label: t("devices.camera.title"),
+                                  onClick: () => setDialog({ kind: "camera", camera: d.cameras[0] }),
+                                },
+                                d.kind === "recorder" && {
+                                  icon: RefreshCw,
+                                  label: t("devices.refreshChannels"),
+                                  onClick: () => setDialog({ kind: "sync", device: d }),
+                                },
+                                {
+                                  icon: Pencil,
+                                  label: t("devices.editDevice"),
+                                  onClick: () => setDialog({ kind: "device", device: d }),
+                                },
+                                {
+                                  icon: Trash2,
+                                  label: t("common.delete"),
+                                  danger: true,
+                                  onClick: () => setDialog({ kind: "deleteDevice", device: d }),
+                                },
+                              ].filter(Boolean) as RowAction[]
+                            }
+                          />
                         </td>
                       </tr>
                       {expanded &&
@@ -272,7 +364,7 @@ export function DevicesPage() {
                           <tr key={c.id} className="sub-row" onClick={() => setDialog({ kind: "camera", camera: c })}>
                             <td />
                             <td>
-                              <span className="channel-tag num">{c.channel}</span>
+                              <span className="channel-no num">{c.channel}</span>
                               <span className={c.enabled ? undefined : "muted"}>{c.name}</span>
                               {c.missing && <span className="badge warn">{t("devices.missing")}</span>}
                             </td>
@@ -285,17 +377,26 @@ export function DevicesPage() {
                                 </span>
                               )}
                             </td>
-                            <td className="muted">{unitNames.get(c.org_unit_id)}</td>
+                            <td className="muted cell-unit" title={unitPath(units, c.org_unit_id)}>
+                              {unitNames.get(c.org_unit_id)}
+                            </td>
                             <td />
-                            <td className="actions" onClick={(e) => e.stopPropagation()}>
-                              <button className="icon-btn sm" title={t("devices.camera.title")} aria-label={t("devices.camera.title")}
-                                onClick={() => setDialog({ kind: "camera", camera: c })}>
-                                <Settings2 size={15} />
-                              </button>
-                              <button className="icon-btn sm danger" title={t("common.delete")} aria-label={t("common.delete")}
-                                onClick={() => setDialog({ kind: "deleteCamera", camera: c })}>
-                                <Trash2 size={15} />
-                              </button>
+                            <td className="actions">
+                              <RowActions
+                                actions={[
+                                  {
+                                    icon: Settings2,
+                                    label: t("devices.camera.title"),
+                                    onClick: () => setDialog({ kind: "camera", camera: c }),
+                                  },
+                                  {
+                                    icon: Trash2,
+                                    label: t("common.delete"),
+                                    danger: true,
+                                    onClick: () => setDialog({ kind: "deleteCamera", camera: c }),
+                                  },
+                                ]}
+                              />
                             </td>
                           </tr>
                         ))}
@@ -304,6 +405,19 @@ export function DevicesPage() {
                 })}
               </tbody>
             </table>
+            <div className="table-foot">
+              <span>{t("devices.shownOf", { shown: rows.length, count: devices.length })}</span>
+              {offline > 0 && (
+                <span className="status-dot offline">
+                  {t("devices.status.offline")}: <span className="num">{offline}</span>
+                </span>
+              )}
+              {filtered && (
+                <button className="btn btn-ghost btn-sm" onClick={resetFilters}>
+                  {t("states.resetFilters")}
+                </button>
+              )}
+            </div>
           </div>
         )}
       </div>

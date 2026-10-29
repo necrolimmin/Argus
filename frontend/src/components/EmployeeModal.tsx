@@ -9,6 +9,7 @@ import type { Employee, EmployeeInput, FaceEvent } from "../api/types";
 import { errorText } from "../lib/errors";
 import { useUi } from "../lib/store";
 import { Modal } from "./Modal";
+import { Thumb } from "./NoImage";
 import { UnitSelect } from "./UnitSelect";
 
 const MAX_PHOTOS = 5;
@@ -147,7 +148,7 @@ export function EmployeeModal({ employee: initial, fromEvent, defaultUnitId, onS
           {fromEvent ? (
             <div className="photos">
               <div className="photo">
-                <img src={fromEvent.face_url || fromEvent.image_url} alt="" />
+                <Thumb src={fromEvent.face_url || fromEvent.image_url} />
               </div>
             </div>
           ) : employee ? (
@@ -155,7 +156,7 @@ export function EmployeeModal({ employee: initial, fromEvent, defaultUnitId, onS
               <div className="photos">
                 {photos.map((p) => (
                   <div className="photo" key={p.id}>
-                    <img src={p.url} alt="" />
+                    <Thumb src={p.url} compact />
                     <button
                       type="button"
                       className="icon-btn sm"

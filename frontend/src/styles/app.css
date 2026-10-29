@@ -102,7 +102,7 @@ h3 {
 .brand-mark {
   width: 24px;
   height: 24px;
-  color: var(--signal);
+  color: var(--accent);
   display: block;
   flex: none;
 }
@@ -1143,7 +1143,7 @@ h3 {
 
 @keyframes fresh {
   from {
-    background: var(--signal-soft);
+    background: var(--surface-3);
   }
 }
 
@@ -1265,7 +1265,7 @@ h3 {
   align-items: flex-start;
   padding: var(--sp-2) var(--sp-3);
   border-radius: var(--r-sm);
-  background: var(--signal-soft);
+  background: var(--surface-3);
   color: var(--text);
   font-size: var(--fs-sm);
   margin-bottom: var(--sp-4);
@@ -1273,7 +1273,7 @@ h3 {
 }
 
 .notice svg {
-  color: var(--signal);
+  color: var(--text-2);
   flex: none;
   margin-top: 1px;
 }
@@ -1482,6 +1482,8 @@ h3 {
   z-index: 70;
   background: var(--overlay);
   display: grid;
+  /* One track as wide as the screen, so a dialog never outgrows it. */
+  grid-template-columns: minmax(0, 1fr);
   place-items: center;
   padding: var(--sp-4);
 }
@@ -1523,7 +1525,8 @@ h3 {
   justify-content: flex-end;
   gap: var(--sp-2);
   padding: var(--sp-3) var(--sp-4) var(--sp-4);
-  border-top: 1px solid var(--line);
+  border-top: 1px solid var(--border);
+  flex-wrap: wrap;
 }
 
 .modal-foot .left {
@@ -1595,7 +1598,11 @@ h3 {
 
 .menu-pop button:hover,
 .menu-pop a:hover {
-  background: var(--panel);
+  background: var(--surface-3);
+}
+
+.menu-pop button.danger {
+  color: var(--danger);
 }
 
 /* ---------------------------------------------------------------- login */
@@ -1693,7 +1700,7 @@ h3 {
     width: 18px;
     height: 1px;
     translate: -50% 0;
-    background: var(--signal);
+    background: var(--accent);
   }
 
   .sidebar-tools,
@@ -1795,7 +1802,7 @@ h3 {
 }
 
 .devices-table .caret {
-  color: var(--muted);
+  color: var(--text-3);
   transition: rotate 0.15s;
   display: block;
 }
@@ -1808,11 +1815,22 @@ h3 {
   font-weight: 500;
 }
 
+/* Channels of an opened device: one step in, smaller, on the row tone. */
 .devices-table .sub-row td {
-  background: var(--bg);
-  font-size: var(--fs-sm);
-  padding-top: var(--sp-2);
-  padding-bottom: var(--sp-2);
+  height: var(--control);
+  background: var(--surface-2);
+  font-size: var(--fs-xs);
+}
+
+.devices-table .sub-row td:nth-child(2) {
+  padding-left: var(--sp-6);
+}
+
+.channel-no {
+  display: inline-block;
+  min-width: var(--sp-5);
+  margin-right: var(--sp-2);
+  color: var(--text-3);
 }
 
 .channel-tag {
@@ -1862,11 +1880,11 @@ h3 {
 }
 
 .vendor-grid button {
-  height: 36px;
+  height: var(--control);
   border-radius: var(--r-sm);
-  border: 1px solid var(--line);
-  background: var(--bg);
-  color: var(--muted);
+  border: 1px solid transparent;
+  background: var(--surface-2);
+  color: var(--text-2);
   cursor: pointer;
   font-weight: 500;
   padding: 0 var(--sp-2);
@@ -1879,7 +1897,9 @@ h3 {
 
 .vendor-grid button[aria-pressed="true"] {
   color: var(--text);
-  border-color: var(--signal);
+  font-weight: 600;
+  background: var(--segment-on);
+  border-color: var(--border-strong);
 }
 
 .probe-ok,
@@ -1946,7 +1966,7 @@ h3 {
   align-items: flex-start;
   margin: var(--sp-2) 0 0;
   font-size: var(--fs-sm);
-  color: var(--signal);
+  color: var(--text-2);
 }
 
 .probe-warn svg {
@@ -1989,7 +2009,7 @@ h3 {
 .channel-note {
   grid-column: 3 / -1;
   font-size: var(--fs-xs);
-  color: var(--signal);
+  color: var(--text-2);
   margin-top: -2px;
 }
 
@@ -2497,4 +2517,156 @@ h3 {
   display: grid;
   gap: var(--sp-3);
   padding: var(--sp-2);
+}
+
+/* --------------------------------------------------- devices page */
+
+/* Fixed columns: filtering or opening a row never makes them jump. */
+.devices-table {
+  table-layout: fixed;
+}
+
+.devices-table .col-caret {
+  width: 36px;
+}
+
+.devices-table .col-name {
+  width: 15%;
+}
+
+.devices-table .col-type {
+  width: 13%;
+}
+
+.devices-table .col-model {
+  width: 25%;
+}
+
+.devices-table .col-address {
+  width: 136px;
+}
+
+.devices-table .col-unit {
+  width: 13%;
+}
+
+.devices-table .col-status {
+  width: 124px;
+}
+
+.devices-table .col-actions {
+  width: 116px;
+}
+
+.devices-table td {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Row actions are always visible: there is no hover on a touch screen. */
+.devices-table .actions .icon-btn {
+  color: var(--text-3);
+}
+
+.devices-table .actions .icon-btn:hover {
+  color: var(--text);
+}
+
+.devices-table .actions .icon-btn.danger:hover {
+  color: var(--danger);
+}
+
+.table-foot {
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  min-height: var(--row);
+  padding: 0 var(--sp-3);
+  font-size: var(--fs-xs);
+  color: var(--text-3);
+}
+
+.table-foot .status-dot {
+  color: var(--text-2);
+}
+
+.table-alert {
+  margin-bottom: var(--sp-3);
+}
+
+.table-alert .state {
+  padding: var(--sp-3) var(--sp-4);
+}
+
+@media (max-width: 860px) {
+  /* A phone keeps the name, address, status and actions; type, model and
+     unit are in the device dialog. */
+  .devices-table {
+    table-layout: auto;
+  }
+
+  .devices-table col {
+    width: auto !important;
+  }
+
+  .devices-table thead th:nth-child(3),
+  .devices-table thead th:nth-child(4),
+  .devices-table thead th:nth-child(6),
+  .devices-table tbody tr:not(.sub-row) td:nth-child(3),
+  .devices-table tbody tr:not(.sub-row) td:nth-child(4),
+  .devices-table tbody tr:not(.sub-row) td:nth-child(6),
+  .devices-table .sub-row td:nth-child(3),
+  .devices-table .sub-row td:nth-child(4) {
+    display: none;
+  }
+}
+
+/* ------------------------------------------- row actions, no image */
+
+.row-actions {
+  display: inline-flex;
+  justify-content: flex-end;
+}
+
+.row-actions-inline {
+  display: inline-flex;
+}
+
+.row-actions-more {
+  display: none;
+}
+
+.row-actions-menu {
+  left: auto;
+  bottom: auto;
+  min-width: 200px;
+}
+
+@media (max-width: 860px) {
+  .row-actions-inline {
+    display: none;
+  }
+
+  .row-actions-more {
+    display: inline-grid;
+  }
+}
+
+/* A missing picture: neutral, never a black hole. */
+.no-image {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-1);
+  background: var(--surface-2);
+  color: var(--text-3);
+  font-size: var(--fs-xs);
+  text-align: center;
+}
+
+.no-image.compact {
+  flex-direction: row;
 }

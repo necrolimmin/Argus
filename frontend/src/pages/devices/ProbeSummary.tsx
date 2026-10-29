@@ -2,6 +2,7 @@ import { Info } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import type { ProbeResult } from "../../api/types";
+import { Thumb } from "../../components/NoImage";
 
 /** What the device said about itself: picture, model, serial, codec, warnings. */
 export function ProbeSummary({ result }: { result: ProbeResult }) {
@@ -17,7 +18,7 @@ export function ProbeSummary({ result }: { result: ProbeResult }) {
 
   return (
     <div className="probe">
-      {result.snapshot ? <img className="probe-shot" src={result.snapshot} alt="" /> : <div className="probe-shot empty" />}
+      <Thumb className="probe-shot" src={result.snapshot} />
       <div className="probe-facts">
         <dl>
           {facts

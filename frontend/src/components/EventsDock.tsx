@@ -9,6 +9,7 @@ import { useLiveEvents } from "../lib/events";
 import { isAdmin, useAuth } from "../lib/store";
 import { DirectionBadge } from "./DirectionBadge";
 import { EmployeeModal } from "./EmployeeModal";
+import { Thumb } from "./NoImage";
 
 function time(iso: string) {
   return new Date(iso).toLocaleTimeString(intlLocale(), { hour: "2-digit", minute: "2-digit", second: "2-digit" });
@@ -77,7 +78,7 @@ export function EventsDock({ cameraIds, defaultUnitId }: Props) {
           {feed.items.map((e) =>
             kind === "recognized" ? (
               <div key={e.id} className={`event${freshIds.has(e.id) ? " fresh" : ""}`}>
-                <img className="event-face" src={e.image_url} alt="" loading="lazy" />
+                <Thumb className="event-face" src={e.image_url} compact />
                 <div className="event-main">
                   <div className="event-name">{e.employee?.full_name ?? "—"}</div>
                   <div className="event-sub">{[e.employee?.position, e.camera_name].filter(Boolean).join(" · ")}</div>
@@ -96,7 +97,7 @@ export function EventsDock({ cameraIds, defaultUnitId }: Props) {
                   onClick={() => setZoom(e.image_url)}
                   aria-label={t("events.notRecognized")}
                 >
-                  <img src={e.image_url} alt="" loading="lazy" />
+                  <Thumb src={e.image_url} compact />
                 </button>
                 <div className="event-main">
                   <div className="event-name num">{time(e.occurred_at)}</div>
