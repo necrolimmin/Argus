@@ -39,7 +39,7 @@ export function App() {
         <Route path="/cameras" element={<CamerasPage />} />
         <Route path="/devices" element={<DevicesPage />} />
         <Route path="/org" element={<OrgPage />} />
-        <Route path="/api" element={<ApiPage />} />
+        <Route path="/integrations" element={<ApiPage />} />
         <Route path="/users" element={<UsersPage />} />
         <Route path="*" element={<Navigate to="/cameras" replace />} />
       </Route>
