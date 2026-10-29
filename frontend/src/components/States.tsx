@@ -52,6 +52,19 @@ export function Skeleton({ rows = 6, columns = [80, 140, 180, 100, 72], headers 
   );
 }
 
+/** A list's rows as grey bars, e.g. the structure tree while it loads. */
+export function ListSkeleton({ rows = 3 }: { rows?: number }) {
+  const { t } = useTranslation();
+  return (
+    <div className="list-skeleton" role="status" aria-live="polite">
+      <span className="visually-hidden">{t("common.loading")}</span>
+      {Array.from({ length: rows }, (_, i) => (
+        <span key={i} className="skeleton-bar" style={{ width: `${70 - i * 12}%`, marginLeft: i ? 16 : 0 }} />
+      ))}
+    </div>
+  );
+}
+
 interface ErrorStateProps {
   /** What failed, in the screen's words: "Не удалось загрузить устройства". */
   title?: string;

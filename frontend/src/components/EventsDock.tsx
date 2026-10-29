@@ -60,7 +60,12 @@ export function EventsDock({ cameraIds, defaultUnitId }: Props) {
           <span className="count">{feed.items.length}</span>
           <span className="spacer" />
           {kind === "unknown" && (
-            <button className="icon-btn sm" onClick={() => setCollapsed(true)} aria-label={t("events.hide")} title={t("events.hide")}>
+            <button
+              className="icon-btn sm"
+              onClick={() => setCollapsed(true)}
+              aria-label={t("events.hide")}
+              title={t("events.hide")}
+            >
               <ChevronDown size={16} />
             </button>
           )}
@@ -75,37 +80,42 @@ export function EventsDock({ cameraIds, defaultUnitId }: Props) {
                 <img className="event-face" src={e.image_url} alt="" loading="lazy" />
                 <div className="event-main">
                   <div className="event-name">{e.employee?.full_name ?? "—"}</div>
-                  <div className="event-sub">{[e.employee?.position, e.employee?.org_unit].filter(Boolean).join(", ")}</div>
-                  <div className="event-sub">{e.camera_name}</div>
+                  <div className="event-sub">{[e.employee?.position, e.camera_name].filter(Boolean).join(" · ")}</div>
                 </div>
                 <div className="event-side">
-                  <span className="event-time">{time(e.occurred_at)}</span>
+                  <span className="event-time num">{time(e.occurred_at)}</span>
                   <DirectionBadge direction={e.direction} />
                 </div>
               </div>
             ) : (
-              <div key={e.id} className={`event${freshIds.has(e.id) ? " fresh" : ""}`}>
-                <button className="event-shot" onClick={() => setZoom(e.image_url)} aria-label={t("events.notRecognized")}>
+              // The column title already says "unrecognized": each row leads
+              // with its time and keeps the add action to one small button.
+              <div key={e.id} className={`event unknown${freshIds.has(e.id) ? " fresh" : ""}`}>
+                <button
+                  className="event-shot"
+                  onClick={() => setZoom(e.image_url)}
+                  aria-label={t("events.notRecognized")}
+                >
                   <img src={e.image_url} alt="" loading="lazy" />
                 </button>
                 <div className="event-main">
-                  <div className="event-name">{t("events.notRecognized")}</div>
-                  <div className="event-sub">{e.camera_name}</div>
-                  {e.linked_employee_name ? (
-                    <div className="event-sub">{t("events.linked", { name: e.linked_employee_name })}</div>
-                  ) : (
-                    admin &&
-                    e.face_url && (
-                      <button className="btn btn-ghost btn-sm event-add" onClick={() => setAdding(e)}>
-                        <UserPlus size={14} />
-                        {t("events.addAsEmployee")}
-                      </button>
-                    )
-                  )}
+                  <div className="event-name num">{time(e.occurred_at)}</div>
+                  <div className="event-sub">
+                    {e.linked_employee_name ? t("events.linked", { name: e.linked_employee_name }) : e.camera_name}
+                  </div>
                 </div>
                 <div className="event-side">
-                  <span className="event-time">{time(e.occurred_at)}</span>
                   <DirectionBadge direction={e.direction} />
+                  {admin && e.face_url && !e.linked_employee_name && (
+                    <button
+                      className="icon-btn sm"
+                      onClick={() => setAdding(e)}
+                      title={t("events.addAsEmployee")}
+                      aria-label={t("events.addAsEmployee")}
+                    >
+                      <UserPlus size={16} />
+                    </button>
+                  )}
                 </div>
               </div>
             ),
@@ -120,8 +130,12 @@ export function EventsDock({ cameraIds, defaultUnitId }: Props) {
     );
   };
 
+  const isEmpty = (kind: EventKind) => !feeds[kind].loading && feeds[kind].items.length === 0;
+  const narrow =
+    isEmpty("recognized") && !isEmpty("unknown") ? " left-empty" : isEmpty("unknown") && !isEmpty("recognized") ? " right-empty" : "";
+
   return (
-    <section className="dock">
+    <section className={`dock${narrow}`}>
       {column("recognized")}
       {column("unknown")}
       {zoom &&

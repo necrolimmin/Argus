@@ -1,14 +1,18 @@
-import { ChevronLeft, ChevronRight, ScanFace, Search, SquareDashed } from "lucide-react";
-import { type DragEvent, useEffect, useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { ChevronDown, ChevronLeft, ChevronRight, ScanFace, Search, SquareDashed } from "lucide-react";
+import { type CSSProperties, type DragEvent, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { useCameras, useUnits } from "../api/queries";
+import { api } from "../api/client";
+import { keys, useCameras, useUnits } from "../api/queries";
 import type { Camera } from "../api/types";
 import { CameraTile, FullscreenCamera } from "../components/CameraTile";
 import { DirectionBadge } from "../components/DirectionBadge";
 import { EventsDock } from "../components/EventsDock";
 import { OrgTree } from "../components/OrgTree";
-import { type Layout, useWall } from "../lib/store";
+import { ListSkeleton } from "../components/States";
+import { isAdmin, type Layout, useAuth, useWall } from "../lib/store";
+import { unitPath } from "../lib/tree";
 import { AUTO_MAX, bento, bentoCells, compact, place, swap } from "../lib/wall";
 
 const LAYOUTS: Exclude<Layout, "auto">[] = [1, 4, 9, 16];
@@ -30,12 +34,20 @@ function GridIcon({ n }: { n: number }) {
 export function CamerasPage() {
   const { t } = useTranslation();
   const wall = useWall();
-  const { data: units = [] } = useUnits();
+  const { data: units = [], isPending: unitsLoading } = useUnits();
   const unitList = useCameras(wall.unitId, wall.unitId !== null);
   const all = useCameras(null);
   const [query, setQuery] = useState("");
   const [fullscreen, setFullscreen] = useState<Camera | null>(null);
   const [dropTarget, setDropTarget] = useState<number | null>(null);
+  // The structure is a compact picker over the camera list; it opens by
+  // itself only while no unit is chosen yet.
+  const [treeOpen, setTreeOpen] = useState(() => wall.unitId === null);
+  const admin = isAdmin(useAuth((s) => s.user));
+  // Device names and addresses tell cameras with the same name apart. The
+  // device list is an administrator's; operators see unit and channel.
+  const devices = useQuery({ queryKey: keys.devices, queryFn: api.devices, enabled: admin });
+  const deviceById = useMemo(() => new Map((devices.data ?? []).map((d) => [d.id, d])), [devices.data]);
 
   const unitNames = useMemo(() => new Map(units.map((u) => [u.id, u.name])), [units]);
   const byId = useMemo(() => new Map((all.data ?? []).map((c) => [c.id, c])), [all.data]);
@@ -60,7 +72,9 @@ export function CamerasPage() {
     return q ? cams.filter((c) => c.name.toLowerCase().includes(q)) : cams;
   }, [unitList.data, query]);
 
-  const selected = compact(wall.cameraIds).map((id) => byId.get(id)).filter((c): c is Camera => !!c);
+  const selected = compact(wall.cameraIds)
+    .map((id) => byId.get(id))
+    .filter((c): c is Camera => !!c);
   const faceIds = selected.filter((c) => c.face_recognition).map((c) => c.id);
 
   // Automatic mode packs the cameras and sizes the grid to their number;
@@ -71,7 +85,9 @@ export function CamerasPage() {
   // others sit around it. Drag a camera onto the big cell to feature it.
   const layoutAuto = bento(Math.min(Math.max(slots.length, 1), AUTO_MAX));
   const perPage = wall.layout === "auto" ? bentoCells(layoutAuto) : wall.layout;
-  const grid = auto ? layoutAuto : { cols: Math.sqrt(perPage), rows: Math.sqrt(perPage), feature: { cols: 1, rows: 1 } };
+  const grid = auto
+    ? layoutAuto
+    : { cols: Math.sqrt(perPage), rows: Math.sqrt(perPage), feature: { cols: 1, rows: 1 } };
   const featured = grid.feature.cols * grid.feature.rows > 1;
   const cellCount = perPage;
   const pages = Math.max(1, Math.ceil(slots.length / perPage));
@@ -79,7 +95,7 @@ export function CamerasPage() {
   const first = page * perPage;
   const cells = Array.from({ length: cellCount }, (_, i) => {
     const id = i < perPage ? slots[first + i] : null;
-    return id ? byId.get(id) ?? null : null;
+    return id ? (byId.get(id) ?? null) : null;
   });
 
   // Never a second page while everything fits on the first: gaps that would
@@ -116,16 +132,33 @@ export function CamerasPage() {
     },
   });
 
+  const scope = wall.unitId ? unitPath(units, wall.unitId) : "";
+  const cellStyle = (i: number): CSSProperties | undefined =>
+    featured && i === 0 ? { gridColumn: `span ${grid.feature.cols}`, gridRow: `span ${grid.feature.rows}` } : undefined;
+
   return (
     <div className="wall-page">
       <aside className="aside">
-        <section className="aside-section">
-          <div className="aside-head">
-            <h2>{t("cameras.structure")}</h2>
-          </div>
-          <div className="aside-scroll">
-            <OrgTree units={units} selectedId={wall.unitId} onSelect={wall.setUnit} count="camera_count" />
-          </div>
+        <section className="unit-pick">
+          <button className="unit-picker" aria-expanded={treeOpen} onClick={() => setTreeOpen((o) => !o)}>
+            <span className="unit-picker-label">{t("cameras.structure")}</span>
+            <span className="unit-picker-value">{scope || t("cameras.chooseUnit")}</span>
+            <ChevronDown size={16} aria-hidden className="unit-picker-caret" />
+          </button>
+          {treeOpen && (
+            <div className="unit-tree">
+              {unitsLoading && <ListSkeleton />}
+              <OrgTree
+                units={units}
+                selectedId={wall.unitId}
+                onSelect={(id) => {
+                  wall.setUnit(id);
+                  setTreeOpen(false);
+                }}
+                count="camera_count"
+              />
+            </div>
+          )}
         </section>
 
         <section className="aside-section">
@@ -145,7 +178,12 @@ export function CamerasPage() {
               {(unitList.data?.length ?? 0) > 8 && (
                 <div className="search aside-search">
                   <Search size={15} />
-                  <input className="input" placeholder={t("common.search")} value={query} onChange={(e) => setQuery(e.target.value)} />
+                  <input
+                    className="input"
+                    placeholder={t("common.search")}
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                  />
                 </div>
               )}
               <div className="aside-scroll">
@@ -154,29 +192,44 @@ export function CamerasPage() {
                     {t("cameras.noCameras")} {t("cameras.addCamerasHint")}
                   </p>
                 )}
-                {listed.map((c) => (
-                  <label
-                    key={c.id}
-                    className="cam-item"
-                    draggable
-                    onDragStart={(e) => {
-                      e.dataTransfer.setData(CAMERA, c.id);
-                      e.dataTransfer.effectAllowed = "move";
-                    }}
-                  >
-                    <input type="checkbox" checked={wall.cameraIds.includes(c.id)} onChange={() => wall.toggleCamera(c.id)} />
-                    <span className="cam-item-text">
-                      <span className="cam-item-name">{c.name}</span>
-                      <span className="cam-item-unit">{unitNames.get(c.org_unit_id)}</span>
-                    </span>
-                    {c.face_recognition &&
-                      (c.direction === "none" ? (
-                        <ScanFace size={15} className="muted" aria-label={t("cameras.face")} />
-                      ) : (
-                        <DirectionBadge direction={c.direction} />
-                      ))}
-                  </label>
-                ))}
+                {listed.map((c) => {
+                  const dev = deviceById.get(c.device_id);
+                  return (
+                    <label
+                      key={c.id}
+                      className="cam-item"
+                      draggable
+                      onDragStart={(e) => {
+                        e.dataTransfer.setData(CAMERA, c.id);
+                        e.dataTransfer.effectAllowed = "move";
+                      }}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={wall.cameraIds.includes(c.id)}
+                        onChange={() => wall.toggleCamera(c.id)}
+                      />
+                      <span className="cam-item-text">
+                        <span className="cam-item-name">{c.name}</span>
+                        {dev ? (
+                          <span className="cam-item-unit num">
+                            {dev.name} · {dev.host}
+                          </span>
+                        ) : (
+                          <span className="cam-item-unit">
+                            {unitNames.get(c.org_unit_id)} · {t("cameras.channelNo", { n: c.channel })}
+                          </span>
+                        )}
+                      </span>
+                      {c.face_recognition &&
+                        (c.direction === "none" ? (
+                          <ScanFace size={15} className="muted" aria-label={t("cameras.face")} />
+                        ) : (
+                          <DirectionBadge direction={c.direction} iconOnly />
+                        ))}
+                    </label>
+                  );
+                })}
               </div>
             </>
           )}
@@ -185,17 +238,31 @@ export function CamerasPage() {
 
       <section className="wall">
         <div className="wall-toolbar">
-          <h1>{t("nav.cameras")}</h1>
-          {wall.unitId && <span className="scope">{unitNames.get(wall.unitId)}</span>}
-          <span className="muted">{t("cameras.selected", { count: selected.length })}</span>
+          <div className="wall-title">
+            <h1>{t("nav.cameras")}</h1>
+            {scope && <span className="scope">{scope}</span>}
+            <span className="wall-count">
+              {t("cameras.shownOf", { shown: selected.length, count: all.data?.length ?? 0 })}
+            </span>
+          </div>
           <span className="spacer" />
           {pages > 1 && (
             <div className="pager">
-              <button className="icon-btn sm" onClick={() => wall.setPage(page - 1)} disabled={page === 0} aria-label="‹">
+              <button
+                className="icon-btn sm"
+                onClick={() => wall.setPage(page - 1)}
+                disabled={page === 0}
+                aria-label="‹"
+              >
                 <ChevronLeft size={16} />
               </button>
               <span className="num">{t("cameras.page", { page: page + 1, pages })}</span>
-              <button className="icon-btn sm" onClick={() => wall.setPage(page + 1)} disabled={page >= pages - 1} aria-label="›">
+              <button
+                className="icon-btn sm"
+                onClick={() => wall.setPage(page + 1)}
+                disabled={page >= pages - 1}
+                aria-label="›"
+              >
                 <ChevronRight size={16} />
               </button>
             </div>
@@ -205,7 +272,12 @@ export function CamerasPage() {
               {t("cameras.auto")}
             </button>
             {LAYOUTS.map((n) => (
-              <button key={n} aria-pressed={wall.layout === n} onClick={() => wall.setLayout(n)} title={`${Math.sqrt(n)}×${Math.sqrt(n)}`}>
+              <button
+                key={n}
+                aria-pressed={wall.layout === n}
+                onClick={() => wall.setLayout(n)}
+                title={`${Math.sqrt(n)}×${Math.sqrt(n)}`}
+              >
                 <GridIcon n={n} />
               </button>
             ))}
@@ -221,10 +293,14 @@ export function CamerasPage() {
           ) : (
             <div
               className="grid"
-              style={{
-                gridTemplateColumns: `repeat(${grid.cols}, minmax(0, 1fr))`,
-                gridTemplateRows: `repeat(${grid.rows}, minmax(0, 1fr))`,
-              }}
+              style={
+                {
+                  gridTemplateColumns: `repeat(${grid.cols}, minmax(0, 1fr))`,
+                  gridTemplateRows: `repeat(${grid.rows}, minmax(0, 1fr))`,
+                  "--cols": grid.cols,
+                  "--rows": grid.rows,
+                } as CSSProperties
+              }
             >
               {cells.map((c, i) =>
                 c ? (
@@ -233,7 +309,7 @@ export function CamerasPage() {
                     camera={c}
                     quality={cellCount === 1 || (featured && i === 0) ? "main" : "sub"}
                     featured={featured && i === 0}
-                    style={featured && i === 0 ? { gridColumn: `span ${grid.feature.cols}`, gridRow: `span ${grid.feature.rows}` } : undefined}
+                    style={cellStyle(i)}
                     onOpen={() => setFullscreen(c)}
                     dropTarget={dropTarget === i}
                     onDragStart={(e) => {
@@ -246,7 +322,7 @@ export function CamerasPage() {
                   <div
                     key={`empty-${i}`}
                     className={`tile empty-slot${dropTarget === i ? " drop-target" : ""}`}
-                    style={featured && i === 0 ? { gridColumn: `span ${grid.feature.cols}`, gridRow: `span ${grid.feature.rows}` } : undefined}
+                    style={cellStyle(i)}
                     {...dropOn(i)}
                   />
                 ),

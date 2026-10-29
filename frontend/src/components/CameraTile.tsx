@@ -1,9 +1,10 @@
-import { ScanFace, VideoOff, X } from "lucide-react";
-import { type CSSProperties, type DragEvent, useEffect } from "react";
+import { RotateCw, ScanFace, VideoOff, X } from "lucide-react";
+import { type CSSProperties, type DragEvent, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 
 import type { Camera, Quality } from "../api/types";
+import { intlLocale } from "../i18n";
 import { useCameraStream } from "../lib/webrtc";
 import { DirectionBadge } from "./DirectionBadge";
 
@@ -22,7 +23,30 @@ interface TileProps {
   style?: CSSProperties;
 }
 
-export function CameraTile({
+/**
+ * "Retry" on a dead tile starts the stream from scratch: the tile body is
+ * remounted under a new key, which opens a fresh connection.
+ */
+export function CameraTile(props: TileProps) {
+  const [attempt, setAttempt] = useState(0);
+  return <TileBody key={attempt} {...props} onRetry={() => setAttempt((a) => a + 1)} />;
+}
+
+/** When the stream entered its current state, and a clock that ticks while it waits. */
+function useSince(status: string) {
+  const [since, setSince] = useState(() => Date.now());
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    setSince(Date.now());
+    setNow(Date.now());
+    if (status !== "connecting") return;
+    const tick = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(tick);
+  }, [status]);
+  return { since, waited: Math.max(0, Math.round((now - since) / 1000)) };
+}
+
+function TileBody({
   camera,
   quality,
   onOpen,
@@ -33,10 +57,13 @@ export function CameraTile({
   dropTarget,
   featured,
   style,
-}: TileProps) {
+  onRetry,
+}: TileProps & { onRetry: () => void }) {
   const { t } = useTranslation();
   const { videoRef, state } = useCameraStream(camera.id, quality, camera.enabled);
   const status = !camera.enabled ? "disabled" : state;
+  const { since, waited } = useSince(status);
+  const sinceTime = new Date(since).toLocaleTimeString(intlLocale(), { hour: "2-digit", minute: "2-digit" });
 
   return (
     <div
@@ -54,15 +81,40 @@ export function CameraTile({
       title={onOpen ? t("cameras.fullscreenHint") : undefined}
     >
       <video ref={videoRef} autoPlay muted playsInline />
-      {status !== "live" && (
+      {status === "connecting" && (
         <div className="tile-state">
-          {status === "connecting" ? <span className="pulse" /> : <VideoOff size={22} />}
-          <span>{t(`cameras.${status === "disabled" ? "disabled" : status}`)}</span>
+          <span className="spinner" aria-hidden />
+          <span>
+            {t("cameras.connecting")} <span className="num">{t("cameras.seconds", { n: waited })}</span>
+          </span>
         </div>
       )}
-      {/* Glass chips over the picture: they stay readable on any frame. */}
+      {status === "offline" && (
+        <div className="tile-state">
+          <VideoOff size={20} aria-hidden />
+          <span>{t("cameras.offlineSince", { time: sinceTime })}</span>
+          <button
+            className="btn btn-sm tile-retry"
+            onClick={(e) => {
+              e.stopPropagation();
+              onRetry();
+            }}
+            onDoubleClick={(e) => e.stopPropagation()}
+          >
+            <RotateCw size={14} aria-hidden />
+            {t("common.retry")}
+          </button>
+        </div>
+      )}
+      {status === "disabled" && (
+        <div className="tile-state">
+          <span>{t("cameras.disabled")}</span>
+        </div>
+      )}
+      {/* The camera's name on a solid scrim, readable on any frame. */}
       <div className="hud">
         <span className="hud-chip">
+          {status === "offline" && <span className="dot offline" aria-hidden />}
           <span className="name">{camera.name}</span>
           {camera.face_recognition && <DirectionBadge direction={camera.direction} />}
         </span>

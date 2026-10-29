@@ -72,14 +72,17 @@ export interface Bento {
 
 // Bento layouts for the automatic grid: the first camera is the big one and
 // the rest fill the cells around it with nothing left over where possible.
+// Every cell is 16:9 and the featured camera spans a square block of cells
+// (2×2 or 3×3), so it stays 16:9 too: no black bands around its picture.
 const BENTO: Record<number, Bento> = {
+  // Up to four cameras the wall is an even grid; a big cell starts at five.
   1: { cols: 1, rows: 1, feature: { cols: 1, rows: 1 } },
   2: { cols: 2, rows: 1, feature: { cols: 1, rows: 1 } },
-  3: { cols: 3, rows: 2, feature: { cols: 2, rows: 2 } },
-  4: { cols: 3, rows: 3, feature: { cols: 2, rows: 3 } },
+  3: { cols: 2, rows: 2, feature: { cols: 1, rows: 1 } },
+  4: { cols: 2, rows: 2, feature: { cols: 1, rows: 1 } },
   5: { cols: 4, rows: 2, feature: { cols: 2, rows: 2 } },
   6: { cols: 3, rows: 3, feature: { cols: 2, rows: 2 } },
-  7: { cols: 4, rows: 3, feature: { cols: 3, rows: 2 } },
+  7: { cols: 4, rows: 4, feature: { cols: 3, rows: 3 } },
   8: { cols: 4, rows: 3, feature: { cols: 2, rows: 2 } },
   9: { cols: 4, rows: 3, feature: { cols: 2, rows: 2 } },
   10: { cols: 4, rows: 4, feature: { cols: 2, rows: 2 } },

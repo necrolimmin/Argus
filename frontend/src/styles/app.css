@@ -662,12 +662,68 @@ h3 {
 
 .aside {
   display: grid;
-  grid-template-rows: minmax(120px, 42%) 1fr;
+  grid-template-rows: auto minmax(0, 1fr);
   grid-template-columns: minmax(0, 1fr);
   min-height: 0;
   min-width: 0;
-  background: var(--panel);
-  border-right: 1px solid var(--line);
+  background: var(--surface-1);
+}
+
+/* The structure takes one line until it is opened. */
+.unit-pick {
+  border-bottom: 1px solid var(--border);
+  min-height: 0;
+}
+
+.unit-picker {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: var(--sp-2);
+  width: 100%;
+  padding: var(--sp-2) var(--sp-4);
+  border: 0;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+}
+
+.unit-picker:hover {
+  background: var(--surface-2);
+}
+
+.unit-picker-label {
+  grid-column: 1;
+  font-size: var(--fs-xs);
+  line-height: var(--lh-xs);
+  color: var(--text-3);
+}
+
+.unit-picker-value {
+  grid-column: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  color: var(--text);
+}
+
+.unit-picker-caret {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  color: var(--text-3);
+}
+
+.unit-picker[aria-expanded="true"] .unit-picker-caret {
+  rotate: 180deg;
+}
+
+.unit-tree {
+  max-height: 40vh;
+  overflow: auto;
+  padding: 0 var(--sp-2) var(--sp-2);
 }
 
 .aside-section {
@@ -676,9 +732,7 @@ h3 {
   min-height: 0;
 }
 
-.aside-section + .aside-section {
-  border-top: 1px solid var(--line);
-}
+
 
 .aside-head {
   display: flex;
@@ -797,11 +851,26 @@ h3 {
   letter-spacing: -0.01em;
 }
 
+.wall-title {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sp-3);
+  min-width: 0;
+}
+
 .wall-toolbar .scope {
-  color: var(--muted);
+  color: var(--text-2);
+  font-size: var(--fs-sm);
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.wall-count {
+  color: var(--text-3);
+  font-size: var(--fs-sm);
+  font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
 
@@ -852,7 +921,9 @@ h3 {
   position: relative;
   min-width: 0;
   min-height: 0;
-  background: var(--video);
+  /* Streams that are not 16:9 (thermal, 4:3, portrait terminals) are shown
+     whole; the bands around them are the tile's grey, not pure black. */
+  background: var(--video-idle);
   border-radius: var(--r-md);
   overflow: hidden;
   cursor: zoom-in;
@@ -972,11 +1043,10 @@ h3 {
 /* ---------------------------------------------------------- events dock */
 
 .dock {
-  border-top: 1px solid var(--line);
-  background: var(--panel);
+  border-top: 1px solid var(--border);
+  background: var(--surface-1);
   display: grid;
   grid-template-columns: 1fr 1fr;
-  height: 280px;
   flex: none;
 }
 
@@ -990,10 +1060,20 @@ h3 {
   flex-direction: column;
   min-width: 0;
   min-height: 0;
+  max-height: 280px;
+}
+
+/* An empty column gives its width to the one that has events. */
+.dock.left-empty {
+  grid-template-columns: minmax(200px, 0.35fr) 1fr;
+}
+
+.dock.right-empty {
+  grid-template-columns: 1fr minmax(200px, 0.35fr);
 }
 
 .dock-col + .dock-col {
-  border-left: 1px solid var(--line);
+  border-left: 1px solid var(--border);
 }
 
 .dock-head {
@@ -1039,8 +1119,8 @@ h3 {
 }
 
 .dock-empty {
-  padding: var(--sp-4) var(--sp-2);
-  color: var(--muted);
+  padding: 0 var(--sp-2) var(--sp-3);
+  color: var(--text-2);
   font-size: var(--fs-sm);
 }
 
@@ -1068,16 +1148,16 @@ h3 {
 }
 
 .event-face {
-  width: 52px;
-  height: 52px;
-  border-radius: var(--r-sm);
+  width: 40px;
+  height: 40px;
+  border-radius: var(--r-xs);
   object-fit: cover;
   background: var(--screen);
   display: block;
 }
 
 .event-shot {
-  width: 112px;
+  width: 96px;
   aspect-ratio: 16 / 9;
   border-radius: var(--r-xs);
   object-fit: cover;
@@ -2176,7 +2256,7 @@ h3 {
   max-width: 100%;
   height: 10px;
   border-radius: 2px;
-  background: var(--surface-2);
+  background: var(--surface-3);
 }
 
 /* ------------------------------------------------- layout utilities */
@@ -2326,3 +2406,95 @@ h3 {
   width: 28px;
 }
 
+
+/* --------------------------------------------------- cameras page */
+
+/* Every wall cell is 16:9: the grid grows to whichever side of the free
+   space runs out first, so pictures do not sit in tall cells. */
+.wall-body {
+  container-type: size;
+  display: grid;
+  place-items: center;
+}
+
+.wall-body > .grid {
+  flex: none;
+  width: min(100cqw, 100cqh * var(--cols) * 16 / (var(--rows) * 9));
+  aspect-ratio: calc(var(--cols) * 16) / calc(var(--rows) * 9);
+}
+
+.wall-body > .empty {
+  align-self: stretch;
+  justify-self: stretch;
+}
+
+.spinner {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid var(--border-strong);
+  border-top-color: var(--text-2);
+  animation: spin 0.9s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    rotate: 360deg;
+  }
+}
+
+.tile-retry {
+  background: var(--surface-3);
+}
+
+/* Leave the bottom row to the camera's name. */
+.tile-state {
+  padding-bottom: calc(var(--sp-2) + var(--sp-6));
+}
+
+.hud-chip .dot {
+  width: 6px;
+  height: 6px;
+}
+
+.event.unknown .event-name {
+  font-weight: 500;
+}
+
+.event-side {
+  align-items: center;
+}
+
+@media (max-width: 860px) {
+  /* On a phone the wall comes first, the picker after it. */
+  .wall {
+    order: -1;
+  }
+
+  .wall-body {
+    container-type: normal;
+    display: block;
+  }
+
+  .wall-body > .grid {
+    width: 100%;
+    aspect-ratio: auto;
+  }
+
+  .wall-title {
+    flex-wrap: wrap;
+    row-gap: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation: none;
+  }
+}
+
+.list-skeleton {
+  display: grid;
+  gap: var(--sp-3);
+  padding: var(--sp-2);
+}
