@@ -2905,3 +2905,88 @@ h3 {
     justify-self: start;
   }
 }
+
+/* ------------------------------------------- sidebar tools, login */
+
+.sidebar-tools {
+  display: block;
+}
+
+.lang-menu {
+  position: relative;
+}
+
+.lang-button {
+  gap: var(--sp-1);
+  padding: 0 var(--sp-2);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+}
+
+/* Opens upward from the bottom of the sidebar or the login card. */
+.lang-pop {
+  left: 0;
+  bottom: calc(100% + var(--sp-1));
+  min-width: 180px;
+}
+
+.lang-pop button {
+  justify-content: space-between;
+}
+
+.lang-pop button[aria-checked="true"] {
+  font-weight: 600;
+}
+
+.nav-collapsed .lang-button span {
+  display: none;
+}
+
+/* The sign-in: one quiet panel in the middle of the room. */
+.login-card {
+  width: min(384px, 100%);
+  padding: var(--sp-6);
+  background: var(--surface-1);
+  border-radius: var(--r-lg);
+}
+
+.login-card .brand {
+  font-size: var(--fs-2xl);
+  line-height: var(--lh-2xl);
+  margin-bottom: 0;
+}
+
+.login-card h1 {
+  margin-bottom: var(--sp-2);
+}
+
+.login-card .btn-primary {
+  margin-top: var(--sp-2);
+}
+
+@media (max-width: 860px) {
+  /* In the phone's top bar the menu opens downward, from the right. */
+  .lang-pop {
+    top: calc(100% + var(--sp-1));
+    bottom: auto;
+    left: auto;
+    right: 0;
+  }
+
+  .login-card {
+    padding: var(--sp-5) var(--sp-4);
+  }
+}
+
+/* On the sign-in card the language menu opens downward, clear of the fields. */
+.login-card .lang-pop {
+  top: calc(100% + var(--sp-1));
+  bottom: auto;
+}
+
+@media (max-width: 860px) {
+  /* The phone's top bar keeps the language button to its icon. */
+  .sidebar .lang-button span {
+    display: none;
+  }
+}

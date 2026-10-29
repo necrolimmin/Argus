@@ -1,9 +1,11 @@
 import { useQueryClient } from "@tanstack/react-query";
 import {
   Building2,
+  Check,
   Cctv,
   CircleUserRound,
   KeyRound,
+  Languages,
   LogOut,
   Moon,
   PanelLeftClose,
@@ -36,15 +38,67 @@ export function Brand() {
   );
 }
 
+/** Close a popup on a click elsewhere or on Escape. */
+function useDismiss(open: boolean, close: () => void) {
+  const ref = useRef<HTMLDivElement>(null);
+  const closeRef = useRef(close);
+  closeRef.current = close;
+  useEffect(() => {
+    if (!open) return;
+    const away = (e: MouseEvent) => !ref.current?.contains(e.target as Node) && closeRef.current();
+    const esc = (e: KeyboardEvent) => e.key === "Escape" && closeRef.current();
+    document.addEventListener("mousedown", away);
+    document.addEventListener("keydown", esc);
+    return () => {
+      document.removeEventListener("mousedown", away);
+      document.removeEventListener("keydown", esc);
+    };
+  }, [open]);
+  return ref;
+}
+
+/**
+ * One small button with the current language; the four languages, each in
+ * its own name, open in a menu above it.
+ */
 export function LanguageSwitch() {
   const { i18n } = useTranslation();
+  const [open, setOpen] = useState(false);
+  const ref = useDismiss(open, () => setOpen(false));
+  const current = LANGUAGES.find((l) => l.code === i18n.language) ?? LANGUAGES[0];
   return (
-    <div className="lang-switch" role="group" aria-label="Language">
-      {LANGUAGES.map((l) => (
-        <button key={l.code} type="button" aria-pressed={i18n.language === l.code} onClick={() => setLanguage(l.code)} title={l.code}>
-          {l.short}
-        </button>
-      ))}
+    <div className="lang-menu" ref={ref}>
+      <button
+        type="button"
+        className="btn btn-ghost btn-sm lang-button"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        aria-label={i18n.t("langName")}
+        title={i18n.t("langName")}
+        onClick={() => setOpen((o) => !o)}
+      >
+        <Languages size={16} aria-hidden />
+        <span>{current.short}</span>
+      </button>
+      {open && (
+        <div className="menu-pop lang-pop" role="menu">
+          {LANGUAGES.map((l) => (
+            <button
+              type="button"
+              key={l.code}
+              role="menuitemradio"
+              aria-checked={l.code === current.code}
+              onClick={() => {
+                setLanguage(l.code);
+                setOpen(false);
+              }}
+            >
+              <span className="lang-name">{i18n.t("langName", { lng: l.code })}</span>
+              {l.code === current.code && <Check size={16} aria-hidden />}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -66,14 +120,7 @@ function UserMenu() {
   const { user, setUser } = useAuth();
   const [open, setOpen] = useState(false);
   const [password, setPassword] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!open) return;
-    const close = (e: MouseEvent) => !ref.current?.contains(e.target as Node) && setOpen(false);
-    document.addEventListener("mousedown", close);
-    return () => document.removeEventListener("mousedown", close);
-  }, [open]);
+  const ref = useDismiss(open, () => setOpen(false));
 
   const logout = () => {
     setToken(null);
@@ -174,8 +221,8 @@ export function Layout() {
           ))}
         </nav>
         <div className="sidebar-tools">
-          <LanguageSwitch />
           <div className="sidebar-row">
+            <LanguageSwitch />
             <ThemeToggle />
             <UserMenu />
             <button className="icon-btn nav-toggle" onClick={toggleNav} title={toggleLabel} aria-label={toggleLabel}>

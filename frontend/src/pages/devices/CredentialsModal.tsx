@@ -53,7 +53,15 @@ export function CredentialsModal({ onClose }: { onClose: () => void }) {
   };
 
   return (
-    <Modal title={t("devices.creds.title")} onClose={onClose}>
+    <Modal
+      title={t("devices.creds.title")}
+      onClose={onClose}
+      footer={
+        <button className="btn btn-ghost" onClick={onClose}>
+          {t("common.close")}
+        </button>
+      }
+    >
       <p className="lead">
         {t("devices.creds.hint")}
       </p>
