@@ -147,7 +147,7 @@ export function DevicesPage() {
           <KeyRound size={16} />
           {t("devices.credentials")}
         </button>
-        <button className="btn" onClick={() => setDialog({ kind: "import" })}>
+        <button className="btn btn-ghost" onClick={() => setDialog({ kind: "import" })}>
           <FileSpreadsheet size={16} />
           {t("devices.import")}
         </button>
@@ -163,7 +163,7 @@ export function DevicesPage() {
 
       {devices.length > 0 && (
         <div className="filters">
-          <div className="search" style={{ flex: "1 1 220px" }}>
+          <div className="search grow-search">
             <Search size={15} />
             <input className="input" placeholder={t("common.search")} value={query} onChange={(e) => setQuery(e.target.value)} />
           </div>
@@ -175,7 +175,7 @@ export function DevicesPage() {
               </button>
             ))}
           </div>
-          <select className="select" style={{ width: "auto" }} value={vendor} onChange={(e) => setVendor(e.target.value)}>
+          <select className="select fit" value={vendor} onChange={(e) => setVendor(e.target.value)}>
             <option value="">{t("devices.allVendors")}</option>
             {vendorsPresent.map((v) => (
               <option key={v} value={v}>
@@ -183,7 +183,7 @@ export function DevicesPage() {
               </option>
             ))}
           </select>
-          <select className="select" style={{ width: "auto", maxWidth: 260 }} value={unitId} onChange={(e) => setUnitId(e.target.value)}>
+          <select className="select fit narrow" value={unitId} onChange={(e) => setUnitId(e.target.value)}>
             <option value="">{t("devices.allUnits")}</option>
             {unitOptions.map((u) => (
               <option key={u.id} value={u.id}>
@@ -210,7 +210,7 @@ export function DevicesPage() {
             <table className="table devices-table">
               <thead>
                 <tr>
-                  <th style={{ width: 28 }} />
+                  <th className="col-caret" />
                   <th>{t("devices.colName")}</th>
                   <th>{t("devices.colType")}</th>
                   <th>{t("devices.colModel")}</th>
@@ -261,7 +261,7 @@ export function DevicesPage() {
                             onClick={() => setDialog({ kind: "device", device: d })}>
                             <Pencil size={15} />
                           </button>
-                          <button className="icon-btn sm" title={t("common.delete")} aria-label={t("common.delete")}
+                          <button className="icon-btn sm danger" title={t("common.delete")} aria-label={t("common.delete")}
                             onClick={() => setDialog({ kind: "deleteDevice", device: d })}>
                             <Trash2 size={15} />
                           </button>
@@ -292,7 +292,7 @@ export function DevicesPage() {
                                 onClick={() => setDialog({ kind: "camera", camera: c })}>
                                 <Settings2 size={15} />
                               </button>
-                              <button className="icon-btn sm" title={t("common.delete")} aria-label={t("common.delete")}
+                              <button className="icon-btn sm danger" title={t("common.delete")} aria-label={t("common.delete")}
                                 onClick={() => setDialog({ kind: "deleteCamera", camera: c })}>
                                 <Trash2 size={15} />
                               </button>

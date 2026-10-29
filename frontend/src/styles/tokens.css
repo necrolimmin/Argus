@@ -23,6 +23,7 @@
   --state-offline: #e0605a;
   --state-unknown: #8f9199;
   --danger: #e0605a;
+  --danger-ink: #ffffff;
   --video: #000000;
   --video-idle: #151515; /* a tile waiting for its picture */
   --on-video: #ffffff;

@@ -6,6 +6,7 @@ const en: Locale = {
     cameras: "Cameras",
     devices: "Devices",
     org: "Staff & organization",
+    orgShort: "Staff",
     api: "API integration",
     users: "Users",
     password: "Change password",
@@ -32,6 +33,12 @@ const en: Locale = {
     optional: "optional",
     loadMore: "Show more",
     retry: "Retry",
+  },
+  states: {
+    loadFailed: "Could not load the data",
+    lastOk: "Last server response:",
+    neverOk: "The server has not answered yet.",
+    resetFilters: "Reset filters",
   },
   levels: {
     company: "Company",

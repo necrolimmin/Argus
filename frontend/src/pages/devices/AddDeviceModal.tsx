@@ -219,7 +219,7 @@ export function AddDeviceModal({ defaultUnitId, preset, onClose }: Props) {
                 autoFocus
               />
             </label>
-            <div className="form-grid" style={{ gap: 12 }}>
+            <div className="form-grid gap-3">
               <label className="field">
                 <span>{vendor === "dvrip" ? t("devices.dvripPort") : t("devices.rtspPort")}</span>
                 <input className="input num" type="number" min={1} max={65535} value={port}
@@ -274,12 +274,12 @@ export function AddDeviceModal({ defaultUnitId, preset, onClose }: Props) {
 
             {multi && (
               <div className="form-section">
-                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <div className="row row-3">
                   <strong>{t("devices.channels")}</strong>
                   <span className="muted num">
                     {chosen.length}/{result.channels.length}
                   </span>
-                  <span style={{ flex: 1 }} />
+                  <span className="spacer" />
                   <label className="check">
                     <input
                       type="checkbox"

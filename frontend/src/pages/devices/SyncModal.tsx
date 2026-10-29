@@ -81,7 +81,7 @@ export function SyncModal({ device, onClose }: { device: Device; onClose: () => 
         </div>
       )}
       {sync.data?.ok && (
-        <div style={{ display: "grid", gap: 16 }}>
+        <div className="stack-4">
           <ProbeSummary result={sync.data} />
           {missing.length > 0 && device.kind === "recorder" && (
             <p className="probe-warn">
@@ -94,7 +94,7 @@ export function SyncModal({ device, onClose }: { device: Device; onClose: () => 
             {fresh.length === 0 ? (
               <p className="muted">{t("devices.sync.none")}</p>
             ) : (
-              <div className="channel-list" style={{ marginTop: 8 }}>
+              <div className="channel-list mt-2">
                 {fresh.map((c) => {
                   const on = c.channel in picked;
                   return (

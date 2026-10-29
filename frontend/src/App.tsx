@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 
 import { api, getToken, handleUnauthorized } from "./api/client";
@@ -10,6 +10,12 @@ import { DevicesPage } from "./pages/DevicesPage";
 import { LoginPage } from "./pages/LoginPage";
 import { OrgPage } from "./pages/OrgPage";
 import { UsersPage } from "./pages/UsersPage";
+
+// The component catalogue exists in development builds only: in production
+// import.meta.env.DEV is false, so this import and the page are dropped.
+const ComponentsPage = import.meta.env.DEV
+  ? lazy(() => import("./pages/dev/ComponentsPage").then((m) => ({ default: m.ComponentsPage })))
+  : null;
 
 export function App() {
   const { user, setUser } = useAuth();
@@ -41,6 +47,16 @@ export function App() {
         <Route path="/org" element={<OrgPage />} />
         <Route path="/integrations" element={<ApiPage />} />
         <Route path="/users" element={<UsersPage />} />
+        {ComponentsPage && (
+          <Route
+            path="/dev/components"
+            element={
+              <Suspense fallback={null}>
+                <ComponentsPage />
+              </Suspense>
+            }
+          />
+        )}
         <Route path="*" element={<Navigate to="/cameras" replace />} />
       </Route>
     </Routes>

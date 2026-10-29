@@ -122,7 +122,7 @@ const TABS = [
   { to: "/cameras", icon: Cctv, label: "nav.cameras", adminOnly: false },
   // Addresses and logins of cameras: administrators only.
   { to: "/devices", icon: Router, label: "nav.devices", adminOnly: true },
-  { to: "/org", icon: Building2, label: "nav.org", adminOnly: false },
+  { to: "/org", icon: Building2, label: "nav.orgShort", adminOnly: false },
   { to: "/integrations", icon: PlugZap, label: "nav.api", adminOnly: false },
 ] as const;
 

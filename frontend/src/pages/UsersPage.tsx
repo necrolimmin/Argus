@@ -43,7 +43,7 @@ export function UsersPage() {
         </button>
       </div>
       <div className="card">
-        <div className="table-wrap card-body" style={{ paddingTop: 8 }}>
+        <div className="table-wrap card-body pt-2">
           <table className="table">
             <thead>
               <tr>

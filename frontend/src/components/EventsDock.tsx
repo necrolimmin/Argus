@@ -31,11 +31,11 @@ export function EventsDock({ cameraIds, defaultUnitId }: Props) {
   if (collapsed) {
     return (
       <section className="dock collapsed">
-        <div className="dock-head" style={{ flex: 1 }}>
+        <div className="dock-head grow">
           <span className={`live-dot${connected ? "" : " off"}`} />
           <h2>{t("events.recognized")}</h2>
           <span className="count">{feeds.recognized.items.length}</span>
-          <h2 style={{ marginLeft: 12 }}>{t("events.unknown")}</h2>
+          <h2 className="ml-3">{t("events.unknown")}</h2>
           <span className="count">{feeds.unknown.items.length}</span>
           <span className="spacer" />
           <button className="btn btn-ghost btn-sm" onClick={() => setCollapsed(false)}>
@@ -96,7 +96,7 @@ export function EventsDock({ cameraIds, defaultUnitId }: Props) {
                   ) : (
                     admin &&
                     e.face_url && (
-                      <button className="btn btn-ghost btn-sm" style={{ marginLeft: -10, marginTop: 2 }} onClick={() => setAdding(e)}>
+                      <button className="btn btn-ghost btn-sm event-add" onClick={() => setAdding(e)}>
                         <UserPlus size={14} />
                         {t("events.addAsEmployee")}
                       </button>
@@ -111,7 +111,7 @@ export function EventsDock({ cameraIds, defaultUnitId }: Props) {
             ),
           )}
           {feed.hasMore && (
-            <button className="btn btn-ghost btn-sm" onClick={() => loadMore(kind)} disabled={feed.loading} style={{ margin: "8px auto", display: "flex" }}>
+            <button className="btn btn-ghost btn-sm more" onClick={() => loadMore(kind)} disabled={feed.loading}>
               {t("common.loadMore")}
             </button>
           )}

@@ -143,14 +143,14 @@ export function CamerasPage() {
           ) : (
             <>
               {(unitList.data?.length ?? 0) > 8 && (
-                <div className="search" style={{ padding: "0 14px 8px" }}>
-                  <Search size={15} style={{ left: 24 }} />
+                <div className="search aside-search">
+                  <Search size={15} />
                   <input className="input" placeholder={t("common.search")} value={query} onChange={(e) => setQuery(e.target.value)} />
                 </div>
               )}
               <div className="aside-scroll">
                 {unitList.isSuccess && unitList.data.length === 0 && (
-                  <p className="aside-note" style={{ padding: "4px 6px" }}>
+                  <p className="aside-note tight">
                     {t("cameras.noCameras")} {t("cameras.addCamerasHint")}
                   </p>
                 )}

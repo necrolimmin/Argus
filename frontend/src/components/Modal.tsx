@@ -66,13 +66,13 @@ export function Confirm({ text, confirmLabel, onConfirm, onClose, busy, error }:
           <button className="btn btn-ghost" onClick={onClose}>
             {t("common.cancel")}
           </button>
-          <button className="btn btn-danger" onClick={onConfirm} disabled={busy}>
+          <button className="btn btn-danger solid" onClick={onConfirm} disabled={busy}>
             {confirmLabel}
           </button>
         </>
       }
     >
-      <p style={{ margin: 0 }}>{text}</p>
+      <p className="m-0">{text}</p>
       {error && <p className="form-error">{error}</p>}
     </Modal>
   );

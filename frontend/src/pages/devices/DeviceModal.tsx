@@ -85,7 +85,7 @@ export function DeviceModal({ device, onClose }: { device: Device; onClose: () =
               <span>{t("devices.host")}</span>
               <input className="input num" value={host} onChange={(e) => setHost(e.target.value)} required />
             </label>
-            <div className="form-grid" style={{ gap: 12 }}>
+            <div className="form-grid gap-3">
               <label className="field">
                 <span>{device.vendor === "dvrip" ? t("devices.dvripPort") : t("devices.rtspPort")}</span>
                 <input className="input num" type="number" min={1} max={65535} value={port} onChange={(e) => setPort(Number(e.target.value))} />
@@ -101,7 +101,7 @@ export function DeviceModal({ device, onClose }: { device: Device; onClose: () =
         )}
         <CredentialPicker value={cred} onChange={setCred} keepHint />
         {(device.model || device.serial) && (
-          <p className="muted wide" style={{ margin: 0, fontSize: "var(--fs-sm)" }}>
+          <p className="lead wide">
             {[device.model, device.serial, device.firmware].filter(Boolean).join(", ")}
           </p>
         )}

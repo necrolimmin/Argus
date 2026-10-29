@@ -140,7 +140,7 @@ export function EmployeeModal({ employee: initial, fromEvent, defaultUnitId, onS
         <div className="form-section">
           <div>
             <strong>{t("employee.photos")}</strong>
-            <div className="muted" style={{ fontSize: "var(--fs-sm)" }}>
+            <div className="muted text-sm">
               {t("employee.photosHint")}
             </div>
           </div>
@@ -173,7 +173,7 @@ export function EmployeeModal({ employee: initial, fromEvent, defaultUnitId, onS
                   </button>
                 )}
               </div>
-              {!photos.length && <div className="muted" style={{ fontSize: "var(--fs-sm)" }}>{t("employee.noPhotos")}</div>}
+              {!photos.length && <div className="muted text-sm">{t("employee.noPhotos")}</div>}
               <input
                 ref={fileRef}
                 type="file"
@@ -187,7 +187,7 @@ export function EmployeeModal({ employee: initial, fromEvent, defaultUnitId, onS
               />
             </>
           ) : (
-            <div className="muted" style={{ fontSize: "var(--fs-sm)" }}>{t("employee.photosAfterSave")}</div>
+            <div className="muted text-sm">{t("employee.photosAfterSave")}</div>
           )}
         </div>
         {error && <p className="form-error" role="alert">{error}</p>}

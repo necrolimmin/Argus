@@ -103,7 +103,7 @@ function Branch({ nodes, open, toggle, root, ...p }: BranchProps) {
                   <button className="icon-btn sm" onClick={() => p.onRename!(n)} title={t("org.rename")} aria-label={t("org.rename")}>
                     <Pencil size={14} />
                   </button>
-                  <button className="icon-btn sm" onClick={() => p.onDelete!(n)} title={t("common.delete")} aria-label={t("common.delete")}>
+                  <button className="icon-btn sm danger" onClick={() => p.onDelete!(n)} title={t("common.delete")} aria-label={t("common.delete")}>
                     <Trash2 size={14} />
                   </button>
                 </span>

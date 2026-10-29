@@ -115,7 +115,7 @@ export function CameraModal({ camera, onClose }: { camera: Camera; onClose: () =
               </div>
 
               {win && (
-                <div style={{ display: "flex", gap: 16, flexWrap: "wrap", alignItems: "end" }}>
+                <div className="row row-4 wrap items-end">
                   <div className="field">
                     <span>{t("devices.camera.days")}</span>
                     <div className="segmented" role="group">

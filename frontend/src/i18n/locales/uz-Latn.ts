@@ -6,6 +6,7 @@ const uzLatn: Locale = {
     cameras: "Kameralar",
     devices: "Qurilmalar",
     org: "Xodimlar va muassasalar",
+    orgShort: "Xodimlar",
     api: "API integratsiyasi",
     users: "Foydalanuvchilar",
     password: "Parolni oʻzgartirish",
@@ -32,6 +33,12 @@ const uzLatn: Locale = {
     optional: "ixtiyoriy",
     loadMore: "Yana koʻrsatish",
     retry: "Qayta urinish",
+  },
+  states: {
+    loadFailed: "Maʼlumotlarni yuklab boʻlmadi",
+    lastOk: "Serverning oxirgi javobi:",
+    neverOk: "Server hali birorta ham javob bermadi.",
+    resetFilters: "Filtrlarni tozalash",
   },
   levels: {
     company: "Kompaniya",

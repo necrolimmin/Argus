@@ -43,7 +43,7 @@ export function LoginPage() {
           <input className="input" type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} required />
         </label>
         {error && (
-          <p className="form-error" role="alert" style={{ margin: 0 }}>
+          <p className="form-error m-0" role="alert">
             {error}
           </p>
         )}

@@ -72,10 +72,10 @@ export function ImportModal({ onClose }: { onClose: () => void }) {
         </>
       }
     >
-      <p className="muted" style={{ marginTop: 0, fontSize: "var(--fs-sm)" }}>
+      <p className="lead">
         {t("devices.importer.hint")}
       </p>
-      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+      <div className="row wrap">
         <button className="btn" onClick={downloadTemplate}>
           <Download size={16} />
           {t("devices.importer.template")}
@@ -99,12 +99,12 @@ export function ImportModal({ onClose }: { onClose: () => void }) {
       {error && <p className="form-error" role="alert">{error}</p>}
 
       {rows && (
-        <div style={{ marginTop: 16, display: "grid", gap: 10 }}>
+        <div className="stack mt-4">
           <div>
             <strong>{t("devices.importer.rowsOk", { count: good.length })}</strong>
             {bad.length > 0 && <div className="form-error">{t("devices.importer.rowsBad", { count: bad.length })}</div>}
           </div>
-          <div className="table-wrap" style={{ maxHeight: 360, overflow: "auto" }}>
+          <div className="table-wrap scroll-box">
             <table className="table">
               <thead>
                 <tr>
@@ -127,7 +127,7 @@ export function ImportModal({ onClose }: { onClose: () => void }) {
                       {r.channel > 1 ? ` #${r.channel}` : ""}
                     </td>
                     <td className="muted">{r.org_path}</td>
-                    <td className="form-error" style={{ fontSize: "var(--fs-sm)" }}>
+                    <td className="form-error text-sm">
                       {r.errors.map((e) => t(`devices.importer.problems.${e}`, { defaultValue: e })).join(", ")}
                     </td>
                   </tr>

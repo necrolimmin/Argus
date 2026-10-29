@@ -1,0 +1,36 @@
+/* ----------------------------------------- /dev/components (dev only) */
+
+.dev-page {
+  display: grid;
+  gap: var(--sp-4);
+  align-content: start;
+}
+
+.dev-page .page-head {
+  margin-bottom: 0;
+}
+
+.dev-section {
+  padding: var(--sp-4);
+}
+
+.dev-section h2 {
+  font-size: var(--fs-lg);
+  margin-bottom: var(--sp-3);
+}
+
+.dev-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: var(--sp-4);
+}
+
+.dev-tiles {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--sp-1);
+}
+
+.dev-tiles .tile {
+  aspect-ratio: 16 / 9;
+}

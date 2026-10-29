@@ -119,7 +119,7 @@ export function ScanModal({ defaultUnitId, onAddOne, onClose }: Props) {
       >
         {step === "bulk" ? (
           <form id="bulk-form" className="form-grid" onSubmit={submitBulk}>
-            <p className="muted wide" style={{ margin: 0, fontSize: "var(--fs-sm)" }}>
+            <p className="lead wide">
               {t("devices.scan.bulkHint")}
             </p>
             <label className="field wide">
@@ -174,7 +174,7 @@ export function ScanModal({ defaultUnitId, onAddOne, onClose }: Props) {
           <strong>{t("devices.scan.range")}</strong>
           <p className="muted">{t("devices.scan.rangeHint")}</p>
           <form
-            style={{ display: "flex", gap: 8 }}
+            className="row"
             onSubmit={(e) => {
               e.preventDefault();
               run.mutate("range");
@@ -198,7 +198,7 @@ export function ScanModal({ defaultUnitId, onAddOne, onClose }: Props) {
 
       {found && !run.isPending && (
         <>
-          <p className="muted" style={{ margin: "16px 0 8px" }}>
+          <p className="muted scan-found">
             {found.length ? t("devices.scan.found", { count: found.length }) : t("devices.scan.nothing")}
           </p>
           {found.length > 0 && (

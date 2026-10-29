@@ -6,6 +6,7 @@ const uzCyrl: Locale = {
     cameras: "Камералар",
     devices: "Қурилмалар",
     org: "Ходимлар ва муассасалар",
+    orgShort: "Ходимлар",
     api: "API интеграцияси",
     users: "Фойдаланувчилар",
     password: "Паролни ўзгартириш",
@@ -32,6 +33,12 @@ const uzCyrl: Locale = {
     optional: "ихтиёрий",
     loadMore: "Яна кўрсатиш",
     retry: "Қайта уриниш",
+  },
+  states: {
+    loadFailed: "Маълумотларни юклаб бўлмади",
+    lastOk: "Сервернинг охирги жавоби:",
+    neverOk: "Сервер ҳали бирорта ҳам жавоб бермади.",
+    resetFilters: "Фильтрларни тозалаш",
   },
   levels: {
     company: "Компания",

@@ -54,7 +54,7 @@ export function CredentialsModal({ onClose }: { onClose: () => void }) {
 
   return (
     <Modal title={t("devices.creds.title")} onClose={onClose}>
-      <p className="muted" style={{ marginTop: 0, fontSize: "var(--fs-sm)" }}>
+      <p className="lead">
         {t("devices.creds.hint")}
       </p>
 
@@ -76,7 +76,7 @@ export function CredentialsModal({ onClose }: { onClose: () => void }) {
             {editing !== "new" && <span className="hint">{t("devices.passwordKeep")}</span>}
           </label>
           {error && <p className="form-error" role="alert">{error}</p>}
-          <div className="wide" style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+          <div className="wide row end">
             <button type="button" className="btn btn-ghost" onClick={() => setEditing(null)}>
               {t("common.cancel")}
             </button>
@@ -88,7 +88,7 @@ export function CredentialsModal({ onClose }: { onClose: () => void }) {
       ) : (
         <>
           {isSuccess && profiles.length === 0 && (
-            <div className="empty" style={{ padding: "8px 0 16px" }}>
+            <div className="empty compact">
               <KeyRound size={30} strokeWidth={1.4} />
               <span>{t("devices.creds.empty")}</span>
             </div>
@@ -98,7 +98,7 @@ export function CredentialsModal({ onClose }: { onClose: () => void }) {
               <div key={p.id} className="cred-row">
                 <div>
                   <div>{p.name}</div>
-                  <div className="muted" style={{ fontSize: "var(--fs-sm)" }}>
+                  <div className="muted text-sm">
                     {p.username}, {t("devices.creds.used", { count: p.device_count })}
                   </div>
                 </div>
@@ -116,7 +116,7 @@ export function CredentialsModal({ onClose }: { onClose: () => void }) {
             ))}
           </div>
           {error && <p className="form-error" role="alert">{error}</p>}
-          <button className="btn btn-sm" style={{ marginTop: 12 }} onClick={() => open("new")}>
+          <button className="btn btn-sm mt-3" onClick={() => open("new")}>
             <Plus size={15} />
             {t("devices.creds.add")}
           </button>

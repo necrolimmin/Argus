@@ -87,7 +87,7 @@ export function FullscreenCamera({ camera, onClose }: { camera: Camera; onClose:
 
   return createPortal(
     <div className="fullscreen" role="dialog" aria-label={camera.name}>
-      <div onDoubleClick={onClose} style={{ position: "absolute", inset: 0 }}>
+      <div className="fill" onDoubleClick={onClose}>
         <CameraTile camera={camera} quality="main" />
       </div>
       <button className="icon-btn close" onClick={onClose} aria-label={t("common.close")}>

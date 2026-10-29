@@ -75,8 +75,8 @@ export function OrgPage() {
               </div>
             ) : (
               <>
-                <div className={`tree-row${unitId === null ? " active" : ""}`} style={{ marginBottom: 2 }}>
-                  <button className="tree-label" style={{ paddingLeft: 10 }} onClick={() => setUnitId(null)}>
+                <div className={`tree-row${unitId === null ? " active" : ""}`}>
+                  <button className="tree-label tree-root" onClick={() => setUnitId(null)}>
                     <span className="tree-name">{t("org.allEmployees")}</span>
                   </button>
                 </div>
@@ -109,8 +109,8 @@ export function OrgPage() {
               </button>
             )}
           </div>
-          <div style={{ display: "flex", gap: 10, padding: "0 16px 12px", flexWrap: "wrap" }}>
-            <div className="search" style={{ flex: "1 1 220px" }}>
+          <div className="row wrap card-toolbar">
+            <div className="search grow-search">
               <Search size={15} />
               <input
                 className="input"
@@ -176,7 +176,7 @@ export function OrgPage() {
                 </tbody>
               </table>
               {items.length < total && (
-                <button className="btn btn-ghost btn-sm" style={{ margin: "10px auto 0", display: "flex" }} onClick={() => setLimit((l) => l + PAGE)}>
+                <button className="btn btn-ghost btn-sm more" onClick={() => setLimit((l) => l + PAGE)}>
                   {t("common.loadMore")}
                 </button>
               )}
