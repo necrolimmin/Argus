@@ -1,9 +1,10 @@
-import "@fontsource/golos-text/400.css";
-import "@fontsource/golos-text/500.css";
-import "@fontsource/golos-text/600.css";
+import "@fontsource/onest/400.css";
+import "@fontsource/onest/500.css";
+import "@fontsource/onest/600.css";
+import "@fontsource/ibm-plex-mono/400.css";
+import "@fontsource/ibm-plex-mono/500.css";
 import "./styles/tokens.css";
 import "./styles/app.css";
-import "./styles/glass.css";
 import "./i18n";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";

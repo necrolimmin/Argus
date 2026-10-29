@@ -1,88 +1,125 @@
 /*
- * Argus "glass" palette: a matte OLED black with two faint lights behind
- * the glass (amber like the brand, teal like an entry), so the translucent
- * panels have something to blur.
- *   signal  — selection, focus, primary action
- *   entry   — a person coming in
- *   exit    — a person going out
+ * Argus tokens, as docs/DESIGN.md defines them: a control-room desk read for
+ * hours. Neutral greys with no blue cast; surfaces differ by tone, not by
+ * borders. Amber is the primary action and the active nav item, nothing else.
  */
 :root,
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --bg: #09090b;
-  --panel: rgba(24, 24, 29, 0.62); /* glass */
-  --panel-solid: #141418; /* glass that must stay opaque, e.g. dialogs */
-  --panel-raised: rgba(255, 255, 255, 0.06);
-  --line: rgba(255, 255, 255, 0.06);
-  --line-strong: rgba(255, 255, 255, 0.14);
-  --text: #f5f5f7;
-  --muted: #a0a0ab;
-  --signal: #f5b445;
-  --signal-ink: #1d1503;
-  --signal-soft: rgba(245, 180, 69, 0.16);
-  --primary: #f5f5f7;
-  --primary-ink: #0b0b0d;
-  --entry: #3fd6a6;
-  --exit: #ff7b6b;
-  --danger: #ff5d73;
-  --screen: #000000;
-  --overlay: rgba(4, 4, 6, 0.66);
-  --shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
-  --hud: rgba(15, 15, 20, 0.4);
-  --hud-edge: rgba(255, 255, 255, 0.1);
-  --glow-a: rgba(245, 180, 69, 0.16);
-  --glow-b: rgba(63, 214, 166, 0.09);
-  --row: rgba(255, 255, 255, 0.025);
-  --row-hover: rgba(255, 255, 255, 0.055);
+  --bg: #0f1012;
+  --surface-1: #16171a;
+  --surface-2: #1d1e22;
+  --surface-3: #26272c;
+  --segment-on: #303137;
+  --border: #2a2b30;
+  --border-strong: #3a3b41;
+  --text: #ececee;
+  --text-2: #a3a5ad;
+  --text-3: #8f9199;
+  --accent: #e8a33d;
+  --accent-hover: #f0b257;
+  --accent-ink: #1a1206;
+  --state-online: #4fae7c;
+  --state-offline: #e0605a;
+  --state-unknown: #8f9199;
+  --danger: #e0605a;
+  --video: #000000;
+  --video-idle: #151515; /* a tile waiting for its picture */
+  --on-video: #ffffff;
+  --scrim: rgba(0, 0, 0, 0.62);
+  --overlay: rgba(0, 0, 0, 0.6);
+  --shadow-float: 0 8px 24px rgba(0, 0, 0, 0.4);
 }
 
 :root[data-theme="light"] {
   color-scheme: light;
-  --bg: #eceef2;
-  --panel: rgba(255, 255, 255, 0.66);
-  --panel-solid: #ffffff;
-  --panel-raised: rgba(15, 16, 19, 0.05);
-  --line: rgba(15, 16, 19, 0.07);
-  --line-strong: rgba(15, 16, 19, 0.16);
-  --text: #0f1013;
-  --muted: #5b5d66;
-  --signal: #a86a06;
-  --signal-ink: #ffffff;
-  --signal-soft: rgba(168, 106, 6, 0.14);
-  --primary: #15161a;
-  --primary-ink: #ffffff;
-  --entry: #0f8a68;
-  --exit: #c4492f;
-  --danger: #c4242a;
-  --screen: #0b0b0c;
-  --overlay: rgba(20, 22, 28, 0.45);
-  --shadow: 0 24px 60px rgba(30, 34, 45, 0.18);
-  --hud: rgba(15, 15, 20, 0.4);
-  --hud-edge: rgba(255, 255, 255, 0.14);
-  --glow-a: rgba(245, 180, 69, 0.22);
-  --glow-b: rgba(63, 214, 166, 0.16);
-  --row: rgba(255, 255, 255, 0.55);
-  --row-hover: rgba(255, 255, 255, 0.85);
+  --bg: #f3f4f6;
+  --surface-1: #ffffff;
+  --surface-2: #f0f1f3;
+  --surface-3: #e5e6ea;
+  --segment-on: #ffffff;
+  --border: #e2e3e7;
+  --border-strong: #c9cbd1;
+  --text: #16171a;
+  --text-2: #4f525b;
+  --text-3: #646772;
+  /* Variant A of DESIGN.md: white text 5.1:1, the button against the page 4.7:1. */
+  --accent: #9a6108;
+  --accent-hover: #87550a;
+  --accent-ink: #ffffff;
+  --state-online: #2f8558;
+  --state-offline: #c0392b;
+  --state-unknown: #8a8d96;
+  --danger: #c0392b;
+  --shadow-float: 0 8px 24px rgba(20, 22, 28, 0.12);
 }
 
 :root {
-  --font: "Golos Text", system-ui, sans-serif;
+  --font-sans: "Onest", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+
   --fs-xs: 12px;
   --fs-sm: 13px;
   --fs-md: 14px;
   --fs-lg: 16px;
   --fs-xl: 20px;
-  --fs-2xl: 26px;
+  --fs-2xl: 24px;
+  --lh-xs: 16px;
+  --lh-sm: 18px;
+  --lh-md: 20px;
+  --lh-lg: 22px;
+  --lh-xl: 26px;
+  --lh-2xl: 30px;
 
-  --r-sm: 8px;
-  --r-md: 10px;
-  --r-lg: 20px;
-  --r-tile: 16px;
-  --r-pill: 999px;
-  --blur: blur(18px) saturate(140%);
-  --ease: cubic-bezier(0.22, 0.8, 0.24, 1);
+  --r-xs: 3px;
+  --r-sm: 6px;
+  --r-md: 8px;
+  --r-lg: 12px;
 
-  --rail: 252px;
-  --rail-collapsed: 76px;
-  --aside: 300px;
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 24px;
+  --sp-6: 32px;
+
+  --control: 32px;
+  --control-sm: 28px;
+  --row: 36px;
+  --ease-out: cubic-bezier(0.2, 0.7, 0.2, 1);
+
+  --sidebar: 236px;
+  --sidebar-collapsed: 56px;
+  --aside: 248px;
+}
+
+/*
+ * Old names, kept as aliases while components move to the new tokens
+ * (DESIGN.md §9). They go at the end of stage 6.
+ */
+:root,
+:root[data-theme="dark"],
+:root[data-theme="light"] {
+  --panel: var(--surface-1);
+  --panel-solid: var(--surface-1);
+  --panel-raised: var(--surface-2);
+  --row-hover: var(--surface-2);
+  --line: var(--border);
+  --line-strong: var(--border-strong);
+  --muted: var(--text-2);
+  --signal: var(--accent);
+  --signal-ink: var(--accent-ink);
+  --signal-soft: var(--surface-3);
+  --primary: var(--accent);
+  --primary-ink: var(--accent-ink);
+  --entry: var(--state-online);
+  --exit: var(--text-2);
+  --screen: var(--video);
+  --hud: var(--scrim);
+  --shadow: var(--shadow-float);
+  --font: var(--font-sans);
+  --rail: var(--sidebar);
+  --rail-collapsed: var(--sidebar-collapsed);
+  --r-tile: var(--r-md);
+  --r-pill: var(--r-sm);
 }
