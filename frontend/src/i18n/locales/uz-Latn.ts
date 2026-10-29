@@ -354,6 +354,15 @@ const uzLatn: Locale = {
   api: {
     title: "API integratsiyasi",
     body: "Tashqi tizimlarni ulash — ish vaqtini hisobga olish, hisobotlar va Excelga eksport — uchinchi bosqichda paydo boʻladi.",
+    lead: "Tashqi tizimlar bilan maʼlumot almashish: kameralar aniqlagan xodimlar oʻtishlari shu yerdan yuboriladi.",
+    upcoming: "Nimalar qoʻshiladi",
+    inProgress: "Ishlab chiqilmoqda",
+    timesheet: "Ish vaqtini hisobga olish",
+    timesheetText: "Har bir xodimning kirish va chiqishdagi aniqlash boʻyicha kelishi va ketishi.",
+    reports: "Hisobotlar",
+    reportsText: "Tanlangan davr uchun boʻlinmalar kesimida kechikishlar, erta ketishlar va ishlangan soatlar.",
+    excel: "Excelga eksport",
+    excelText: "Buxgalteriya va kadrlar boʻlimi uchun tabel va oʻtishlar jurnali .xlsx faylida.",
   },
   errors: {
     bad_credentials: "Qurilma logini yoki paroli notoʻgʻri.",

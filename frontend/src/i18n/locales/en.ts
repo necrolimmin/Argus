@@ -354,6 +354,15 @@ const en: Locale = {
   api: {
     title: "API integration",
     body: "Connecting external systems — time tracking, reports and Excel export — arrives in stage three.",
+    lead: "Data exchange with external systems: staff passages recognised by the cameras will be sent from here.",
+    upcoming: "Coming next",
+    inProgress: "In development",
+    timesheet: "Time tracking",
+    timesheetText: "Each person's arrival and departure from recognition at the entry and exit.",
+    reports: "Reports",
+    reportsText: "Late arrivals, early departures and hours worked by unit for a chosen period.",
+    excel: "Excel export",
+    excelText: "Timesheet and passage log as an .xlsx file for accounting and HR.",
   },
   errors: {
     bad_credentials: "Wrong device login or password.",

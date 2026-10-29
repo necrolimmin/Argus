@@ -2831,3 +2831,77 @@ h3 {
     flex: 1 1 100%;
   }
 }
+
+/* ------------------------------------------------- integrations page */
+
+/* Title with one sentence under it, on the page's left edge. */
+.page-head-lead {
+  display: grid;
+  gap: var(--sp-1);
+}
+
+.page-head-lead .lead {
+  max-width: 64ch;
+  margin: 0;
+}
+
+/* A short list: as wide as it needs, not stretched across the screen. */
+.upcoming {
+  max-width: 760px;
+  padding: var(--sp-4) 0 var(--sp-2);
+}
+
+.upcoming-title {
+  padding: 0 var(--sp-4) var(--sp-3);
+  font-size: var(--fs-lg);
+}
+
+.upcoming-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.upcoming-item {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: start;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
+  border-top: 1px solid var(--border);
+}
+
+.upcoming-icon {
+  margin-top: 2px;
+  color: var(--text-3);
+}
+
+.upcoming-text {
+  display: grid;
+  gap: 2px;
+}
+
+.upcoming-name {
+  font-weight: 500;
+  color: var(--text-2);
+}
+
+.upcoming-desc {
+  font-size: var(--fs-sm);
+  color: var(--text-3);
+}
+
+.upcoming-item .badge {
+  margin: 0;
+}
+
+@media (max-width: 860px) {
+  .upcoming-item {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .upcoming-item .badge {
+    grid-column: 2;
+    justify-self: start;
+  }
+}
