@@ -41,7 +41,7 @@ export function LanguageSwitch() {
   return (
     <div className="lang-switch" role="group" aria-label="Language">
       {LANGUAGES.map((l) => (
-        <button key={l.code} aria-pressed={i18n.language === l.code} onClick={() => setLanguage(l.code)} title={l.code}>
+        <button key={l.code} type="button" aria-pressed={i18n.language === l.code} onClick={() => setLanguage(l.code)} title={l.code}>
           {l.short}
         </button>
       ))}
@@ -54,7 +54,7 @@ export function ThemeToggle() {
   const { theme, toggleTheme } = useUi();
   const label = theme === "dark" ? t("nav.themeLight") : t("nav.themeDark");
   return (
-    <button className="icon-btn" onClick={toggleTheme} title={label} aria-label={label}>
+    <button type="button" className="icon-btn" onClick={toggleTheme} title={label} aria-label={label}>
       {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
     </button>
   );
