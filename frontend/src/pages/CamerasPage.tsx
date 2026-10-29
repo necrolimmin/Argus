@@ -9,7 +9,7 @@ import { DirectionBadge } from "../components/DirectionBadge";
 import { EventsDock } from "../components/EventsDock";
 import { OrgTree } from "../components/OrgTree";
 import { type Layout, useWall } from "../lib/store";
-import { AUTO_MAX, autoGrid, compact, place, swap } from "../lib/wall";
+import { AUTO_MAX, bento, bentoCells, compact, place, swap } from "../lib/wall";
 
 const LAYOUTS: Exclude<Layout, "auto">[] = [1, 4, 9, 16];
 // What is being dragged onto a cell: another cell, or a camera from the list.
@@ -67,9 +67,13 @@ export function CamerasPage() {
   // a fixed grid keeps each camera in the cell it was put in, gaps included.
   const auto = wall.layout === "auto";
   const slots = auto ? compact(wall.cameraIds) : wall.cameraIds;
-  const perPage = wall.layout === "auto" ? Math.min(Math.max(slots.length, 1), AUTO_MAX) : wall.layout;
-  const grid = auto ? autoGrid(perPage) : { cols: Math.sqrt(perPage), rows: Math.sqrt(perPage) };
-  const cellCount = grid.cols * grid.rows;
+  // Automatic mode is a bento: the first camera is featured large and the
+  // others sit around it. Drag a camera onto the big cell to feature it.
+  const layoutAuto = bento(Math.min(Math.max(slots.length, 1), AUTO_MAX));
+  const perPage = wall.layout === "auto" ? bentoCells(layoutAuto) : wall.layout;
+  const grid = auto ? layoutAuto : { cols: Math.sqrt(perPage), rows: Math.sqrt(perPage), feature: { cols: 1, rows: 1 } };
+  const featured = grid.feature.cols * grid.feature.rows > 1;
+  const cellCount = perPage;
   const pages = Math.max(1, Math.ceil(slots.length / perPage));
   const page = Math.min(wall.page, pages - 1);
   const first = page * perPage;
@@ -227,7 +231,9 @@ export function CamerasPage() {
                   <CameraTile
                     key={c.id}
                     camera={c}
-                    quality={cellCount === 1 ? "main" : "sub"}
+                    quality={cellCount === 1 || (featured && i === 0) ? "main" : "sub"}
+                    featured={featured && i === 0}
+                    style={featured && i === 0 ? { gridColumn: `span ${grid.feature.cols}`, gridRow: `span ${grid.feature.rows}` } : undefined}
                     onOpen={() => setFullscreen(c)}
                     dropTarget={dropTarget === i}
                     onDragStart={(e) => {
@@ -237,7 +243,12 @@ export function CamerasPage() {
                     {...dropOn(i)}
                   />
                 ) : (
-                  <div key={`empty-${i}`} className={`tile empty-slot${dropTarget === i ? " drop-target" : ""}`} {...dropOn(i)} />
+                  <div
+                    key={`empty-${i}`}
+                    className={`tile empty-slot${dropTarget === i ? " drop-target" : ""}`}
+                    style={featured && i === 0 ? { gridColumn: `span ${grid.feature.cols}`, gridRow: `span ${grid.feature.rows}` } : undefined}
+                    {...dropOn(i)}
+                  />
                 ),
               )}
             </div>

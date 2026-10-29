@@ -1,0 +1,641 @@
+/*
+ * Glass layer. Loaded after app.css and only overrides it, so the flat
+ * theme comes back by removing this file and the token changes.
+ *
+ * One idea throughout: everything that is not video is a pane of glass
+ * floating over a matte black room lit by two faint lamps.
+ */
+
+/* ------------------------------------------------------------ the room */
+
+body {
+  background:
+    radial-gradient(60vw 50vh at 8% -10%, var(--glow-a), transparent 70%),
+    radial-gradient(50vw 50vh at 100% 110%, var(--glow-b), transparent 70%),
+    var(--bg);
+  background-attachment: fixed;
+}
+
+:focus-visible {
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+/* --------------------------------------------------------------- shell */
+
+.app {
+  padding: 12px;
+  gap: 12px;
+}
+
+.sidebar {
+  background: var(--panel);
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  padding: 16px 12px 14px;
+}
+
+.main {
+  border-radius: var(--r-lg);
+}
+
+.brand {
+  font-size: 17px;
+}
+
+.nav {
+  position: relative;
+  gap: 4px;
+}
+
+/* The one pill that glides between items. */
+.nav-pill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  border-radius: 12px;
+  background: var(--panel-raised);
+  box-shadow: inset 0 0 0 1px var(--line-strong), 0 6px 20px rgba(0, 0, 0, 0.25);
+  transition:
+    transform 0.42s var(--ease),
+    width 0.42s var(--ease),
+    height 0.42s var(--ease);
+  pointer-events: none;
+}
+
+.nav a {
+  z-index: 1;
+  height: 42px;
+  border-radius: 12px;
+  transition: color 0.2s;
+}
+
+.nav a:hover {
+  background: none;
+  color: var(--text);
+}
+
+.nav a.active svg {
+  color: var(--signal);
+}
+
+/* The flat theme's underline marks are replaced by the pill. */
+.nav a.active span {
+  box-shadow: none;
+  padding-block: 0;
+}
+
+.nav-collapsed .nav a.active::after,
+.nav a.active::after {
+  display: none;
+}
+
+.lang-switch {
+  gap: 2px;
+  padding: 3px;
+  border-radius: var(--r-pill);
+  background: var(--panel-raised);
+}
+
+.lang-switch button {
+  border-radius: var(--r-pill);
+  transition:
+    background 0.25s var(--ease),
+    color 0.2s;
+}
+
+.lang-switch button[aria-pressed="true"] {
+  box-shadow: none;
+  background: var(--primary);
+  color: var(--primary-ink);
+}
+
+.page {
+  padding: 14px 14px 32px;
+}
+
+.page-head h1 {
+  font-size: var(--fs-2xl);
+  font-weight: 600;
+  letter-spacing: -0.025em;
+}
+
+/* ------------------------------------------------------------ controls */
+
+.btn {
+  transition:
+    background 0.2s,
+    border-color 0.2s,
+    transform 0.15s var(--ease);
+}
+
+.btn:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.btn:not(.btn-primary):not(.btn-ghost) {
+  background: var(--panel-raised);
+  border-color: var(--line);
+}
+
+.btn:not(.btn-primary):not(.btn-ghost):hover {
+  border-color: var(--line-strong);
+}
+
+.icon-btn {
+  border-radius: 10px;
+}
+
+.input,
+.select {
+  height: 36px;
+  border-radius: 12px;
+  border-color: var(--line);
+  background: var(--panel-raised);
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
+}
+
+.input:focus,
+.select:focus {
+  border-color: var(--signal);
+  box-shadow: 0 0 0 4px var(--signal-soft);
+}
+
+.select option {
+  background: var(--panel-solid);
+}
+
+/* Segmented controls: a track with a raised chip, like the nav pill. */
+.segmented {
+  gap: 2px;
+  padding: 3px;
+  border-radius: var(--r-pill);
+  background: var(--panel-raised);
+}
+
+.segmented button {
+  height: 30px;
+  padding: 0 12px;
+  min-width: 34px;
+  border-radius: var(--r-pill);
+  transition:
+    background 0.25s var(--ease),
+    color 0.2s;
+}
+
+.segmented button[aria-pressed="true"] {
+  box-shadow: none;
+  background: var(--primary);
+  color: var(--primary-ink);
+}
+
+.check input,
+.cam-item input {
+  accent-color: var(--signal);
+}
+
+/* ---------------------------------------------------------- glass panes */
+
+.aside,
+.card,
+.dock-col {
+  background: var(--panel);
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+}
+
+.tree-row {
+  border-radius: 10px;
+}
+
+.tree-row.active {
+  background: var(--panel-raised);
+  box-shadow: inset 0 0 0 1px var(--line-strong);
+}
+
+.tree-row.active .tree-name {
+  box-shadow: none;
+}
+
+.tree .tree {
+  border-left-color: var(--line-strong);
+}
+
+.cam-item {
+  border-radius: 12px;
+  transition: background 0.2s;
+}
+
+/* -------------------------------------------------------- cameras page */
+
+.wall-page {
+  gap: 12px;
+}
+
+.aside {
+  border-right: 1px solid var(--line);
+}
+
+.wall {
+  gap: 12px;
+}
+
+.wall-toolbar {
+  flex: none;
+  border-bottom: 0;
+  padding: 4px 4px 0;
+  min-height: 44px;
+}
+
+.wall-toolbar h1 {
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+}
+
+.wall-body {
+  padding: 0;
+}
+
+/* The bento: cells flow around the featured camera. */
+.grid {
+  gap: 10px;
+  grid-auto-flow: dense;
+}
+
+.tile {
+  border-radius: var(--r-tile);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: #000;
+  transition:
+    border-color 0.35s var(--ease),
+    box-shadow 0.35s var(--ease);
+  isolation: isolate;
+}
+
+.tile video {
+  transition: transform 0.7s var(--ease);
+}
+
+.tile:hover {
+  border-color: rgba(255, 255, 255, 0.2);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.05),
+    0 16px 50px rgba(0, 0, 0, 0.5);
+}
+
+.tile:hover video {
+  transform: scale(1.025);
+}
+
+/* Face cameras keep their meaning as a tinted glass edge, not a bar. */
+.tile[data-direction="entry"]::before,
+.tile[data-direction="exit"]::before {
+  display: none;
+}
+
+.tile[data-direction="entry"] {
+  border-color: color-mix(in srgb, var(--entry) 38%, transparent);
+}
+
+.tile[data-direction="exit"] {
+  border-color: color-mix(in srgb, var(--exit) 38%, transparent);
+}
+
+.tile.featured .hud-chip {
+  font-size: var(--fs-md);
+  padding: 7px 14px;
+}
+
+.tile.empty-slot {
+  border: 1px dashed var(--line-strong);
+  background: rgba(255, 255, 255, 0.015);
+}
+
+.tile.empty-slot:hover {
+  box-shadow: none;
+}
+
+.drop-target {
+  outline: 2px solid var(--signal);
+  outline-offset: -2px;
+  box-shadow: 0 0 0 6px var(--signal-soft);
+}
+
+.tile-state {
+  border-radius: inherit;
+}
+
+/* Liquid-glass HUD over the picture. */
+.hud {
+  position: absolute;
+  z-index: 2;
+  left: 10px;
+  right: 10px;
+  bottom: 10px;
+  display: flex;
+  pointer-events: none;
+}
+
+.hud-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  max-width: 100%;
+  padding: 5px 11px;
+  border-radius: var(--r-pill);
+  background: var(--hud);
+  backdrop-filter: blur(12px) saturate(150%);
+  -webkit-backdrop-filter: blur(12px) saturate(150%);
+  border: 1px solid var(--hud-edge);
+  color: #fff;
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  line-height: 1.3;
+}
+
+.hud-chip .name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hud-corner {
+  position: absolute;
+  z-index: 2;
+  top: 10px;
+  right: 10px;
+  padding: 6px;
+  pointer-events: none;
+}
+
+.hud .dir-entry {
+  color: #62f0c4;
+}
+
+.hud .dir-exit {
+  color: #ff9c8f;
+}
+
+/* ------------------------------------------- recognized / unknown bento */
+
+.dock {
+  height: 290px;
+  gap: 12px;
+  background: none;
+  border-top: 0;
+}
+
+.dock.collapsed {
+  background: var(--panel);
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+}
+
+.dock-col + .dock-col {
+  border-left: 1px solid var(--line);
+}
+
+.dock-head {
+  min-height: 50px;
+  padding: 10px 14px 6px 18px;
+}
+
+.dock-head h2 {
+  font-size: var(--fs-lg);
+  letter-spacing: -0.01em;
+}
+
+.dock-head .count {
+  min-width: 22px;
+  padding: 1px 7px;
+  border-radius: var(--r-pill);
+  background: var(--panel-raised);
+  text-align: center;
+}
+
+.dock-list {
+  padding: 2px 10px 12px;
+}
+
+.event {
+  padding: 8px 10px;
+  border-radius: 14px;
+  background: var(--row);
+  margin-bottom: 6px;
+  transition: background 0.2s;
+}
+
+.event + .event {
+  border-top: 0;
+}
+
+.event:hover {
+  background: var(--row-hover);
+}
+
+.event-face {
+  border-radius: 12px;
+}
+
+.event-shot {
+  border-radius: 10px;
+}
+
+/* LEDs: status dots glow in their own colour. */
+.live-dot,
+.status::before,
+.status-dot.online::before {
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--entry) 22%, transparent), 0 0 10px 1px var(--entry);
+}
+
+.status-dot.offline::before {
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--danger) 22%, transparent), 0 0 10px 1px var(--danger);
+}
+
+.live-dot.off,
+.status.off::before {
+  box-shadow: none;
+}
+
+/* --------------------------------------------- tables as rows of glass */
+
+.card:has(.table) {
+  background: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border: 0;
+  overflow: visible;
+}
+
+.table {
+  border-collapse: separate;
+  border-spacing: 0 6px;
+}
+
+.table th {
+  border-bottom: 0;
+  padding: 4px 14px 2px;
+  font-size: var(--fs-xs);
+}
+
+.table td {
+  border-bottom: 0;
+  padding: 12px 14px;
+  background: var(--row);
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
+  transition: background 0.2s;
+}
+
+.table td:first-child {
+  border-radius: 14px 0 0 14px;
+}
+
+.table td:last-child {
+  border-radius: 0 14px 14px 0;
+}
+
+.table td:only-child {
+  border-radius: 14px;
+}
+
+.table tbody tr:hover td {
+  background: var(--row-hover);
+}
+
+.avatar {
+  border-radius: 12px;
+  border: 0;
+}
+
+/* ------------------------------------------------------------- overlays */
+
+.modal-backdrop,
+.lightbox {
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.modal,
+.menu-pop,
+.toast {
+  background: color-mix(in srgb, var(--panel-solid) 82%, transparent);
+  backdrop-filter: blur(28px) saturate(150%);
+  -webkit-backdrop-filter: blur(28px) saturate(150%);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-lg);
+}
+
+.toast {
+  border-left: 1px solid var(--line-strong);
+}
+
+.vendor-grid button {
+  border-radius: 12px;
+  background: var(--panel-raised);
+  border-color: var(--line);
+}
+
+.vendor-grid button[aria-pressed="true"] {
+  border-color: var(--signal);
+  box-shadow: 0 0 0 3px var(--signal-soft);
+  color: var(--text);
+}
+
+.probe-shot {
+  border-radius: 12px;
+}
+
+/* --------------------------------------------------------------- login */
+
+.login {
+  background: none;
+}
+
+.login-card {
+  width: min(400px, 100%);
+  padding: 32px 28px 24px;
+  background: var(--panel);
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  box-shadow: var(--shadow);
+}
+
+/* -------------------------------------------------------------- phones */
+
+@media (max-width: 860px) {
+  .app,
+  .app.nav-collapsed {
+    padding: 8px;
+    gap: 8px;
+  }
+
+  .sidebar {
+    padding: 6px 8px;
+    border-radius: 16px;
+  }
+
+  .wall-page {
+    gap: 8px;
+  }
+
+  .dock {
+    height: auto;
+    gap: 8px;
+  }
+
+  .dock-col + .dock-col {
+    border-top: 1px solid var(--line);
+  }
+
+  .page {
+    padding: 8px 4px 24px;
+  }
+
+  /* Phone wall: the featured camera full width, the rest two by two,
+     every cell 16:9, and the page scrolls. */
+  .wall-body {
+    height: auto;
+  }
+
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    grid-template-rows: none !important;
+    grid-auto-rows: auto;
+    gap: 8px;
+  }
+
+  .grid > .tile {
+    aspect-ratio: 16 / 9;
+  }
+
+  .grid > .tile.featured,
+  .grid > :only-child {
+    grid-column: 1 / -1 !important;
+    grid-row: auto !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nav-pill,
+  .tile video {
+    transition: none;
+  }
+
+  .tile:hover video {
+    transform: none;
+  }
+}

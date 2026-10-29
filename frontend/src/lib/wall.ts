@@ -62,3 +62,39 @@ export function place(slots: Slots, id: string, to: number): Slots {
   next[to] = id;
   return trim(displaced ? add(next, [displaced]) : next);
 }
+
+export interface Bento {
+  cols: number;
+  rows: number;
+  /** Cells the first (featured) camera spans; 1×1 when there is none. */
+  feature: { cols: number; rows: number };
+}
+
+// Bento layouts for the automatic grid: the first camera is the big one and
+// the rest fill the cells around it with nothing left over where possible.
+const BENTO: Record<number, Bento> = {
+  1: { cols: 1, rows: 1, feature: { cols: 1, rows: 1 } },
+  2: { cols: 2, rows: 1, feature: { cols: 1, rows: 1 } },
+  3: { cols: 3, rows: 2, feature: { cols: 2, rows: 2 } },
+  4: { cols: 3, rows: 3, feature: { cols: 2, rows: 3 } },
+  5: { cols: 4, rows: 2, feature: { cols: 2, rows: 2 } },
+  6: { cols: 3, rows: 3, feature: { cols: 2, rows: 2 } },
+  7: { cols: 4, rows: 3, feature: { cols: 3, rows: 2 } },
+  8: { cols: 4, rows: 3, feature: { cols: 2, rows: 2 } },
+  9: { cols: 4, rows: 3, feature: { cols: 2, rows: 2 } },
+  10: { cols: 4, rows: 4, feature: { cols: 2, rows: 2 } },
+  11: { cols: 4, rows: 4, feature: { cols: 2, rows: 2 } },
+  12: { cols: 4, rows: 4, feature: { cols: 2, rows: 2 } },
+  13: { cols: 4, rows: 4, feature: { cols: 2, rows: 2 } },
+};
+
+/** Past 13 cameras the cells are too small to feature one: a plain grid. */
+export function bento(n: number): Bento {
+  const count = Math.min(Math.max(n, 1), AUTO_MAX);
+  if (BENTO[count]) return BENTO[count];
+  const { cols, rows } = autoGrid(count);
+  return { cols, rows, feature: { cols: 1, rows: 1 } };
+}
+
+/** How many cameras a bento layout holds. */
+export const bentoCells = (b: Bento) => b.cols * b.rows - b.feature.cols * b.feature.rows + 1;

@@ -13,9 +13,9 @@ import {
   Sun,
   Users,
 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Link, NavLink, Outlet } from "react-router-dom";
+import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 
 import { setToken } from "../api/client";
 import { LANGUAGES, setLanguage } from "../i18n";
@@ -126,17 +126,46 @@ const TABS = [
   { to: "/api", icon: PlugZap, label: "nav.api", adminOnly: false },
 ] as const;
 
+/**
+ * One pill behind the active nav item that glides to the next one when the
+ * tab changes, instead of each item lighting up on its own.
+ */
+function useNavPill(deps: unknown[]) {
+  const navRef = useRef<HTMLElement>(null);
+  const [pill, setPill] = useState<{ x: number; y: number; w: number; h: number } | null>(null);
+  useLayoutEffect(() => {
+    const place = () => {
+      const active = navRef.current?.querySelector<HTMLElement>("a.active");
+      setPill(active ? { x: active.offsetLeft, y: active.offsetTop, w: active.offsetWidth, h: active.offsetHeight } : null);
+    };
+    place();
+    window.addEventListener("resize", place);
+    return () => window.removeEventListener("resize", place);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, deps);
+  return { navRef, pill };
+}
+
 export function Layout() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const toast = useUi((s) => s.toast);
   const { navCollapsed, toggleNav } = useUi();
   const admin = isAdmin(useAuth((s) => s.user));
   const toggleLabel = navCollapsed ? t("nav.expand") : t("nav.collapse");
+  const { pathname } = useLocation();
+  const { navRef, pill } = useNavPill([pathname, navCollapsed, admin, i18n.language]);
   return (
     <div className={`app${navCollapsed ? " nav-collapsed" : ""}`}>
       <aside className="sidebar">
         <Brand />
-        <nav className="nav">
+        <nav className="nav" ref={navRef}>
+          {pill && (
+            <span
+              className="nav-pill"
+              aria-hidden
+              style={{ width: pill.w, height: pill.h, transform: `translate(${pill.x}px, ${pill.y}px)` }}
+            />
+          )}
           {TABS.filter((tab) => admin || !tab.adminOnly).map(({ to, icon: Icon, label }) => (
             <NavLink key={to} to={to} title={navCollapsed ? t(label) : undefined}>
               <Icon size={18} aria-hidden />

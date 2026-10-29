@@ -1,5 +1,5 @@
 import { ScanFace, VideoOff, X } from "lucide-react";
-import { type DragEvent, useEffect } from "react";
+import { type CSSProperties, type DragEvent, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 
@@ -17,16 +17,31 @@ interface TileProps {
   onDragLeave?: () => void;
   onDrop?: (e: DragEvent) => void;
   dropTarget?: boolean;
+  /** The big cell of the bento wall. */
+  featured?: boolean;
+  style?: CSSProperties;
 }
 
-export function CameraTile({ camera, quality, onOpen, onDragStart, onDragOver, onDragLeave, onDrop, dropTarget }: TileProps) {
+export function CameraTile({
+  camera,
+  quality,
+  onOpen,
+  onDragStart,
+  onDragOver,
+  onDragLeave,
+  onDrop,
+  dropTarget,
+  featured,
+  style,
+}: TileProps) {
   const { t } = useTranslation();
   const { videoRef, state } = useCameraStream(camera.id, quality, camera.enabled);
   const status = !camera.enabled ? "disabled" : state;
 
   return (
     <div
-      className={`tile${dropTarget ? " drop-target" : ""}`}
+      className={`tile${dropTarget ? " drop-target" : ""}${featured ? " featured" : ""}`}
+      style={style}
       data-direction={camera.face_recognition ? camera.direction : "none"}
       draggable={Boolean(onDragStart)}
       onDragStart={onDragStart}
@@ -45,15 +60,18 @@ export function CameraTile({ camera, quality, onOpen, onDragStart, onDragOver, o
           <span>{t(`cameras.${status === "disabled" ? "disabled" : status}`)}</span>
         </div>
       )}
-      <div className="tile-label">
-        <span className="name">{camera.name}</span>
-        {camera.face_recognition && <DirectionBadge direction={camera.direction} />}
-        {camera.face_recognition && (
-          <span className="face-mark" title={t("cameras.face")}>
-            <ScanFace size={15} aria-label={t("cameras.face")} />
-          </span>
-        )}
+      {/* Glass chips over the picture: they stay readable on any frame. */}
+      <div className="hud">
+        <span className="hud-chip">
+          <span className="name">{camera.name}</span>
+          {camera.face_recognition && <DirectionBadge direction={camera.direction} />}
+        </span>
       </div>
+      {camera.face_recognition && (
+        <span className="hud-chip hud-corner" title={t("cameras.face")}>
+          <ScanFace size={15} aria-label={t("cameras.face")} />
+        </span>
+      )}
     </div>
   );
 }

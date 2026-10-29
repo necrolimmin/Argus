@@ -1,73 +1,88 @@
 /*
- * Argus palette: a monitoring desk read for hours. Neutral greys with no
- * blue cast, so the only colour on screen is the video and the data.
- *   signal  — the one selection mark: a 1px line under what is chosen,
- *             plus focus. Never a fill on chrome.
+ * Argus "glass" palette: a matte OLED black with two faint lights behind
+ * the glass (amber like the brand, teal like an entry), so the translucent
+ * panels have something to blur.
+ *   signal  — selection, focus, primary action
  *   entry   — a person coming in
  *   exit    — a person going out
- * Panels sit darker than the ground (cards recede, the wall leads).
  */
 :root,
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --bg: #171719;
-  --panel: #131215;
-  --panel-raised: #212023;
-  --line: #242427;
-  --line-strong: #3a3a3e;
-  --text: #f2f2f3;
-  --muted: #8f9197; /* 5.6:1 on --panel */
-  --signal: #e9a83a;
+  --bg: #09090b;
+  --panel: rgba(24, 24, 29, 0.62); /* glass */
+  --panel-solid: #141418; /* glass that must stay opaque, e.g. dialogs */
+  --panel-raised: rgba(255, 255, 255, 0.06);
+  --line: rgba(255, 255, 255, 0.06);
+  --line-strong: rgba(255, 255, 255, 0.14);
+  --text: #f5f5f7;
+  --muted: #a0a0ab;
+  --signal: #f5b445;
   --signal-ink: #1d1503;
-  --signal-soft: rgba(233, 168, 58, 0.14);
-  --primary: #f2f2f3; /* inverted primary: light fill, dark label */
-  --primary-ink: #111113;
-  --entry: #3fbf9b;
-  --exit: #ec7a62;
-  --danger: #e5566f;
-  --screen: #000000; /* behind video */
-  --overlay: rgba(0, 0, 0, 0.72);
-  --shadow: 0 12px 28px rgba(0, 0, 0, 0.35);
+  --signal-soft: rgba(245, 180, 69, 0.16);
+  --primary: #f5f5f7;
+  --primary-ink: #0b0b0d;
+  --entry: #3fd6a6;
+  --exit: #ff7b6b;
+  --danger: #ff5d73;
+  --screen: #000000;
+  --overlay: rgba(4, 4, 6, 0.66);
+  --shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
+  --hud: rgba(15, 15, 20, 0.4);
+  --hud-edge: rgba(255, 255, 255, 0.1);
+  --glow-a: rgba(245, 180, 69, 0.16);
+  --glow-b: rgba(63, 214, 166, 0.09);
+  --row: rgba(255, 255, 255, 0.025);
+  --row-hover: rgba(255, 255, 255, 0.055);
 }
 
 :root[data-theme="light"] {
   color-scheme: light;
-  --bg: #f4f4f5;
-  --panel: #ffffff;
-  --panel-raised: #ececee;
-  --line: #e4e4e7;
-  --line-strong: #cfd0d4;
-  --text: #111113;
-  --muted: #5d5f66; /* 6.3:1 on white */
+  --bg: #eceef2;
+  --panel: rgba(255, 255, 255, 0.66);
+  --panel-solid: #ffffff;
+  --panel-raised: rgba(15, 16, 19, 0.05);
+  --line: rgba(15, 16, 19, 0.07);
+  --line-strong: rgba(15, 16, 19, 0.16);
+  --text: #0f1013;
+  --muted: #5b5d66;
   --signal: #a86a06;
   --signal-ink: #ffffff;
-  --signal-soft: rgba(168, 106, 6, 0.12);
-  --primary: #1b1b1e;
+  --signal-soft: rgba(168, 106, 6, 0.14);
+  --primary: #15161a;
   --primary-ink: #ffffff;
-  --entry: #0f7f63;
-  --exit: #bf4b32;
+  --entry: #0f8a68;
+  --exit: #c4492f;
   --danger: #c4242a;
   --screen: #0b0b0c;
-  --overlay: rgba(10, 10, 12, 0.6);
-  --shadow: 0 12px 28px rgba(17, 17, 19, 0.16);
+  --overlay: rgba(20, 22, 28, 0.45);
+  --shadow: 0 24px 60px rgba(30, 34, 45, 0.18);
+  --hud: rgba(15, 15, 20, 0.4);
+  --hud-edge: rgba(255, 255, 255, 0.14);
+  --glow-a: rgba(245, 180, 69, 0.22);
+  --glow-b: rgba(63, 214, 166, 0.16);
+  --row: rgba(255, 255, 255, 0.55);
+  --row-hover: rgba(255, 255, 255, 0.85);
 }
 
 :root {
   --font: "Golos Text", system-ui, sans-serif;
-  /* Dense working UI: 13–14px body, a 24px screen title. */
   --fs-xs: 12px;
   --fs-sm: 13px;
   --fs-md: 14px;
   --fs-lg: 16px;
   --fs-xl: 20px;
-  --fs-2xl: 24px;
+  --fs-2xl: 26px;
 
-  --r-sm: 4px;
-  --r-md: 6px;
-  --r-lg: 6px;
+  --r-sm: 8px;
+  --r-md: 10px;
+  --r-lg: 20px;
+  --r-tile: 16px;
   --r-pill: 999px;
+  --blur: blur(18px) saturate(140%);
+  --ease: cubic-bezier(0.22, 0.8, 0.24, 1);
 
-  --rail: 248px;
-  --rail-collapsed: 56px;
+  --rail: 252px;
+  --rail-collapsed: 76px;
   --aside: 300px;
 }
