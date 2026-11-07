@@ -1,5 +1,5 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Building2, Plus, Search, UserRound } from "lucide-react";
+import { Building2, ImageOff, Plus, Search, UserRound } from "lucide-react";
 import { type FormEvent, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -9,6 +9,7 @@ import { LEVELS, type Employee, type OrgLevel } from "../api/types";
 import { EmployeeModal } from "../components/EmployeeModal";
 import { Confirm, Modal } from "../components/Modal";
 import { Thumb } from "../components/NoImage";
+import { StatFilter } from "../components/StatFilter";
 import { EmptyState, ErrorState, Skeleton } from "../components/States";
 import { UnitPicker } from "../components/UnitPicker";
 import { errorText } from "../lib/errors";
@@ -30,6 +31,18 @@ function initials(name: string) {
     .join("");
 }
 
+/** How many people match, without loading them: one row is enough for the total. */
+function useEmployeeCount(unitId: string | null, query: string, active: boolean | undefined) {
+  return (
+    useQuery({
+      queryKey: [...keys.employees, "count", unitId, query, active],
+      queryFn: () => api.employees({ org_unit_id: unitId, q: query, active, limit: 1 }),
+      placeholderData: keepPreviousData,
+      select: (r) => r.total,
+    }).data ?? 0
+  );
+}
+
 export function OrgPage() {
   const { t } = useTranslation();
   const admin = isAdmin(useAuth((s) => s.user));
@@ -48,6 +61,12 @@ export function OrgPage() {
     queryFn: () => api.employees({ org_unit_id: unitId, q: query, active, limit }),
     placeholderData: keepPreviousData,
   });
+  // The figures at the top: the same unit and search, by status.
+  const counts = {
+    all: useEmployeeCount(unitId, query, undefined),
+    active: useEmployeeCount(unitId, query, true),
+    inactive: useEmployeeCount(unitId, query, false),
+  };
   const items = employees.data?.items ?? [];
   const total = employees.data?.total ?? 0;
   const hasData = employees.data !== undefined;
@@ -68,8 +87,10 @@ export function OrgPage() {
   return (
     <div className="page">
       <div className="page-head">
-        <h1>{t("nav.org")}</h1>
-        {hasData && <span className="muted num">{total}</span>}
+        <div className="page-title">
+          <h1>{t("nav.org")}</h1>
+          <p className="page-lead">{t("org.lead")}</p>
+        </div>
         <span className="spacer" />
         {admin && units.length > 0 && (
           <button className="btn btn-primary" onClick={() => setEditing("new")}>
@@ -78,6 +99,20 @@ export function OrgPage() {
           </button>
         )}
       </div>
+
+      <StatFilter
+        label={t("org.status")}
+        value={active === undefined ? "all" : active ? "active" : "inactive"}
+        onChange={(k) => {
+          setActive(k === "all" ? undefined : k === "active");
+          setLimit(PAGE);
+        }}
+        stats={[
+          { key: "all", label: t("nav.orgShort"), count: counts.all },
+          { key: "active", label: t("common.active"), count: counts.active, dot: "online" },
+          { key: "inactive", label: t("common.inactive"), count: counts.inactive, dot: "unknown" },
+        ]}
+      />
 
       <div className="filters">
         <UnitPicker
@@ -124,18 +159,6 @@ export function OrgPage() {
               setLimit(PAGE);
             }}
           />
-        </div>
-        <div className="segmented" role="group" aria-label={t("org.status")}>
-          {[
-            { v: undefined, label: t("common.all") },
-            { v: true, label: t("common.active") },
-            { v: false, label: t("common.inactive") },
-          ].map((o) => (
-            <button key={String(o.v)} aria-pressed={active === o.v} onClick={() => setActive(o.v)}>
-              {o.v !== undefined && <i className={`dot ${o.v ? "online" : "unknown"}`} />}
-              {o.label}
-            </button>
-          ))}
         </div>
       </div>
 
@@ -191,6 +214,7 @@ export function OrgPage() {
                 <col className="col-number" />
                 <col className="col-position" />
                 <col className="col-unit" />
+                <col className="col-photos" />
                 <col className="col-status" />
               </colgroup>
               <thead>
@@ -199,6 +223,7 @@ export function OrgPage() {
                   <th className="num-r">{t("employee.personnelNumber")}</th>
                   <th>{t("employee.position")}</th>
                   <th>{t("employee.unit")}</th>
+                  <th>{t("org.photosCol")}</th>
                   <th>{t("org.status")}</th>
                 </tr>
               </thead>
@@ -223,6 +248,17 @@ export function OrgPage() {
                     <td title={e.position}>{e.position}</td>
                     <td className="muted" title={unitPath(units, e.org_unit_id)}>
                       {unitNames.get(e.org_unit_id)}
+                    </td>
+                    <td>
+                      {/* Without a photo the person cannot be recognised: say so in the row. */}
+                      {e.photos.length ? (
+                        <span className="num muted">{e.photos.length}</span>
+                      ) : (
+                        <span className="badge warn no-photo" title={t("org.noPhotoHint")}>
+                          <ImageOff size={12} aria-hidden />
+                          {t("org.noPhoto")}
+                        </span>
+                      )}
                     </td>
                     <td>
                       <span className={`status${e.is_active ? "" : " off"}`}>

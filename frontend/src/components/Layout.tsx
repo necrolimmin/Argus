@@ -25,15 +25,25 @@ import { intlLocale, LANGUAGES, setLanguage } from "../i18n";
 import { isAdmin, useAuth, useUi } from "../lib/store";
 import { PasswordModal } from "../pages/PasswordModal";
 
+/**
+ * The Argus mark: the four corners of a camera viewfinder framing the lens.
+ * The corners are the motif of the whole interface (camera tiles show them
+ * on hover); the lens is the one amber spot.
+ */
+export function Logo({ size = 24 }: { size?: number }) {
+  return (
+    <svg className="logo" width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path className="logo-frame" d="M2 8V3.5C2 2.67 2.67 2 3.5 2H8M16 2h4.5c.83 0 1.5.67 1.5 1.5V8M22 16v4.5c0 .83-.67 1.5-1.5 1.5H16M8 22H3.5C2.67 22 2 21.33 2 20.5V16" strokeWidth="2.2" strokeLinecap="round" />
+      <circle className="logo-lens" cx="12" cy="12" r="4.6" />
+      <circle className="logo-glint" cx="13.6" cy="10.4" r="1.25" />
+    </svg>
+  );
+}
+
 export function Brand() {
   return (
     <div className="brand">
-      {/* Argus, the watchman of a hundred eyes: one eye, its iris and pupil. */}
-      <svg className="brand-mark" viewBox="0 0 24 24" fill="none" aria-hidden>
-        <path d="M1.75 12C5 6.25 19 6.25 22.25 12 19 17.75 5 17.75 1.75 12Z" stroke="currentColor" strokeWidth="1.75" strokeLinejoin="round" />
-        <circle cx="12" cy="12" r="3.9" stroke="currentColor" strokeWidth="1.75" />
-        <circle cx="12" cy="12" r="1.5" fill="currentColor" />
-      </svg>
+      <Logo />
       <span>Argus</span>
     </div>
   );
@@ -124,42 +134,10 @@ function initials(name: string) {
     .join("");
 }
 
-// Hour marks all round; figures only at the quarters, as on a wall clock.
-const MARKS = Array.from({ length: 12 }, (_, i) => i);
-const QUARTERS = [
-  { n: 12, x: 100, y: 46 },
-  { n: 3, x: 154, y: 100 },
-  { n: 6, x: 100, y: 154 },
-  { n: 9, x: 46, y: 100 },
-];
-
-interface HandProps {
-  deg: number;
-  length: number;
-  tail: number;
-  width: number;
-  className: string;
-}
-
-/** A hand from a little behind the centre out to `length`, at `deg` clockwise from the top. */
-function Hand({ deg, length, tail, width, className }: HandProps) {
-  return (
-    <line
-      className={className}
-      x1="100"
-      y1={100 + tail}
-      x2="100"
-      y2={100 - length}
-      strokeWidth={width}
-      transform={`rotate(${deg} 100 100)`}
-    />
-  );
-}
-
 /**
- * The station clock: a wall-clock dial in the site's own colours, figures at
- * the quarters, three hands; the second hand is the brand amber. The exact time and the date sit beside it
- * for matching against event times.
+ * The station clock: the time large, seconds on a thin track that fills over
+ * the minute like a recorder's progress bar, and the date. Operators match
+ * event times against it.
  */
 function StationClock() {
   const { i18n } = useTranslation();
@@ -169,42 +147,20 @@ function StationClock() {
     return () => clearInterval(tick);
   }, []);
   const locale = intlLocale();
-  const h = now.getHours() % 12;
-  const m = now.getMinutes();
+  const hm = now.toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit", hour12: false });
   const sec = now.getSeconds();
-  const time = now.toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit", hour12: false });
-  const date = now.toLocaleDateString(locale, { weekday: "short", day: "numeric", month: "long" });
+  const date = now.toLocaleDateString(locale, { weekday: "long", day: "numeric", month: "long" });
   return (
-    <div className="station-clock" key={i18n.language}>
-      <svg className="clock-dial" viewBox="0 0 200 200" role="img" aria-label={`${time}, ${date}`}>
-        <circle className="clock-face" cx="100" cy="100" r="95" />
-        {MARKS.map((k) => (
-          <line
-            key={k}
-            className={k % 3 === 0 ? "clock-mark quarter" : "clock-mark"}
-            x1="100"
-            y1="13"
-            x2="100"
-            y2={k % 3 === 0 ? 27 : 24}
-            transform={`rotate(${k * 30} 100 100)`}
-          />
-        ))}
-        {QUARTERS.map((q) => (
-          <text key={q.n} className="clock-figure" x={q.x} y={q.y}>
-            {q.n}
-          </text>
-        ))}
-        <Hand className="clock-hand hour" deg={(h + m / 60) * 30} length={52} tail={0} width={9} />
-        <Hand className="clock-hand minute" deg={(m + sec / 60) * 6} length={76} tail={0} width={6} />
-        <Hand className="clock-hand second" deg={sec * 6} length={80} tail={0} width={3} />
-        <circle className="clock-cap" cx="100" cy="100" r="9" />
-      </svg>
-      <div className="clock-caption">
-        <time className="clock-time" dateTime={now.toISOString()}>
-          {time}
-        </time>
-        <span className="clock-date">{date}</span>
-      </div>
+    <div className="station-clock" key={i18n.language} role="timer" aria-label={`${hm}, ${date}`}>
+      <time className="clock-time" dateTime={now.toISOString()}>
+        {hm}
+        <span className="clock-seconds">{String(sec).padStart(2, "0")}</span>
+      </time>
+      <span className="clock-track" aria-hidden>
+        {/* A new bar each minute, so it starts empty instead of sliding back. */}
+        <i key={now.getMinutes()} style={{ width: `${((sec + 1) / 60) * 100}%` }} />
+      </span>
+      <span className="clock-date">{date}</span>
     </div>
   );
 }
@@ -272,12 +228,19 @@ function UserMenu() {
   );
 }
 
-const TABS = [
-  { to: "/cameras", icon: Cctv, label: "nav.cameras", adminOnly: false },
-  // Addresses and logins of cameras: administrators only.
-  { to: "/devices", icon: Router, label: "nav.devices", adminOnly: true },
-  { to: "/org", icon: Building2, label: "nav.orgShort", adminOnly: false },
-  { to: "/integrations", icon: PlugZap, label: "nav.api", adminOnly: false },
+// The menu in three groups, so a newcomer sees what is for watching, what
+// is for setting things up, and what is the system itself.
+const GROUPS = [
+  { label: "nav.groupWatch", tabs: [{ to: "/cameras", icon: Cctv, label: "nav.cameras", hint: "nav.hintCameras", adminOnly: false }] },
+  {
+    label: "nav.groupManage",
+    tabs: [
+      // Addresses and logins of cameras: administrators only.
+      { to: "/devices", icon: Router, label: "nav.devices", hint: "nav.hintDevices", adminOnly: true },
+      { to: "/org", icon: Building2, label: "nav.orgShort", hint: "nav.hintOrg", adminOnly: false },
+    ],
+  },
+  { label: "nav.groupSystem", tabs: [{ to: "/integrations", icon: PlugZap, label: "nav.api", hint: "nav.hintApi", adminOnly: false }] },
 ] as const;
 
 /**
@@ -323,12 +286,24 @@ export function Layout() {
               style={{ width: pill.w, height: pill.h, transform: `translate(${pill.x}px, ${pill.y}px)` }}
             />
           )}
-          {TABS.filter((tab) => admin || !tab.adminOnly).map(({ to, icon: Icon, label }) => (
-            <NavLink key={to} to={to} title={navCollapsed ? t(label) : undefined}>
-              <Icon size={18} aria-hidden />
-              <span className="nav-label">{t(label)}</span>
-            </NavLink>
-          ))}
+          {GROUPS.map((group) => {
+            const tabs = group.tabs.filter((tab) => admin || !tab.adminOnly);
+            if (!tabs.length) return null;
+            return (
+              <div key={group.label} className="nav-group" role="group" aria-label={t(group.label)}>
+                <span className="nav-group-label">{t(group.label)}</span>
+                {tabs.map(({ to, icon: Icon, label, hint }) => (
+                  <NavLink key={to} to={to} title={navCollapsed ? t(label) : undefined}>
+                    <Icon size={18} aria-hidden />
+                    <span className="nav-text">
+                      <span className="nav-label">{t(label)}</span>
+                      <span className="nav-hint">{t(hint)}</span>
+                    </span>
+                  </NavLink>
+                ))}
+              </div>
+            );
+          })}
         </nav>
         <div className="sidebar-tools">
           <div className="sidebar-row">

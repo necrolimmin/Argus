@@ -3,6 +3,13 @@ import type { Locale } from "./ru";
 const uzLatn: Locale = {
   langName: "Oʻzbekcha",
   nav: {
+    groupWatch: "Kuzatuv",
+    groupManage: "Boshqaruv",
+    groupSystem: "Tizim",
+    hintCameras: "Video va hodisalar",
+    hintDevices: "Kameralar va registratorlar",
+    hintOrg: "Odamlar va tuzilma",
+    hintApi: "Boshqa tizimlar bilan aloqa",
     cameras: "Kameralar",
     devices: "Qurilmalar",
     org: "Xodimlar va muassasalar",
@@ -58,12 +65,17 @@ const uzLatn: Locale = {
     none: "Yoʻnalishsiz",
   },
   login: {
+    tagline: "Videokuzatuv va yuz boʻyicha oʻtishlar hisobi",
+    point1: "Har qanday ishlab chiqaruvchining kameralari bitta devorda",
+    point2: "Kirish va chiqishda xodimlarni taniydi",
+    point3: "Sizning tarmogʻingizda ishlaydi, bulutsiz",
     title: "Argus tizimiga kirish",
     username: "Login",
     password: "Parol",
     submit: "Kirish",
   },
   cameras: {
+    lead: "Boʻlinmani tanlang va kameralarni belgilang: ular devorda paydo boʻladi.",
     structure: "Tuzilma",
     pickUnit: "Kompaniya, filial, korxona yoki boʻlimni tanlang — uning kameralari shu yerda chiqadi.",
     list: "Kameralar",
@@ -103,6 +115,11 @@ const uzLatn: Locale = {
     reconnecting: "Qayta ulanmoqda…",
   },
   devices: {
+    lead: "Argusga ulangan kameralar va registratorlar.",
+    addByIp: "IP-manzil boʻyicha",
+    addByIpHint: "Bitta kamera yoki registrator",
+    scanHint: "Tarmoqdan qurilmalarni topish",
+    importHint: ".xlsx yoki .csv fayldan roʻyxat",
     title: "Qurilmalar",
     add: "Qoʻshish",
     scanNetwork: "Tarmoqni skanerlash",
@@ -276,6 +293,10 @@ const uzLatn: Locale = {
     },
   },
   org: {
+    lead: "Tashkilot tuzilmasi va tizim taniydigan xodimlar.",
+    photosCol: "Surat",
+    noPhoto: "Suratsiz",
+    noPhotoHint: "Suratsiz tizim bu odamni tanimaydi",
     addCompany: "Kompaniya qoʻshish",
     emptyStructure: "Kompaniyadan boshlang: keyin uning ichida filiallar, korxonalar va boʻlimlar paydo boʻladi.",
     rename: "Nomini oʻzgartirish",
@@ -313,6 +334,7 @@ const uzLatn: Locale = {
     photoAdded: "Surat qoʻshildi",
   },
   users: {
+    lead: "Argusga kim kira oladi va unga nimalar ochiq.",
     title: "Foydalanuvchilar",
     add: "Foydalanuvchi qoʻshish",
     username: "Login",

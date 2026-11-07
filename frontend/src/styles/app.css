@@ -99,14 +99,6 @@ h3 {
   padding: var(--sp-1) var(--sp-2) var(--sp-2);
 }
 
-.brand-mark {
-  width: 24px;
-  height: 24px;
-  color: var(--accent);
-  display: block;
-  flex: none;
-}
-
 .nav {
   display: grid;
   gap: 2px;
@@ -176,7 +168,6 @@ h3 {
   padding-inline: 0;
 }
 
-.nav-collapsed .brand > span:not(.brand-mark),
 .nav-collapsed .nav a .nav-label {
   display: none;
 }
@@ -1359,11 +1350,6 @@ h3 {
   font-size: var(--fs-2xl);
   justify-self: start;
   margin-bottom: var(--sp-2);
-}
-
-.login-card .brand-mark {
-  width: 32px;
-  height: 32px;
 }
 
 .login-card h1 {
@@ -2736,88 +2722,6 @@ h3 {
   padding: 0;
 }
 
-/* The station clock: a wall-clock dial in the theme's own colours, figures at
-   the quarters, three hands; the second hand carries the brand amber. */
-.station-clock {
-  display: grid;
-  grid-template-columns: 88px minmax(0, 1fr);
-  align-items: center;
-  gap: var(--sp-3);
-}
-
-.clock-dial {
-  width: 88px;
-  height: 88px;
-  display: block;
-}
-
-.clock-face {
-  fill: var(--clock-face);
-  stroke: var(--clock-rim);
-  stroke-width: 8;
-}
-
-.clock-mark {
-  stroke: var(--clock-rim);
-  stroke-width: 6;
-  stroke-linecap: round;
-}
-
-.clock-mark.quarter {
-  stroke-width: 7;
-}
-
-.clock-figure {
-  fill: var(--clock-rim);
-  font-family: var(--font-sans);
-  font-size: 34px;
-  font-weight: 600;
-  letter-spacing: -0.03em;
-  text-anchor: middle;
-  dominant-baseline: central;
-}
-
-.clock-hand {
-  stroke-linecap: butt;
-}
-
-.clock-hand.hour {
-  stroke: var(--clock-rim);
-}
-
-.clock-hand.minute {
-  stroke: var(--clock-minute);
-}
-
-.clock-hand.second {
-  stroke: var(--clock-second);
-}
-
-.clock-cap {
-  fill: var(--clock-rim);
-}
-
-.clock-caption {
-  display: grid;
-  gap: 2px;
-  min-width: 0;
-}
-
-.clock-time {
-  font-family: var(--font-mono);
-  font-variant-numeric: tabular-nums;
-  font-size: var(--fs-xl);
-  line-height: var(--lh-xl);
-  font-weight: 500;
-  color: var(--text);
-}
-
-.clock-date {
-  font-size: var(--fs-xs);
-  line-height: var(--lh-xs);
-  color: var(--text-2);
-}
-
 /* Bottom: tools on one row, then who is signed in. */
 .sidebar-tools {
   display: grid;
@@ -2905,21 +2809,6 @@ h3 {
   justify-items: center;
 }
 
-/* Collapsed: the dial alone, small; the hour marks stand in for figures. */
-.nav-collapsed .station-clock {
-  grid-template-columns: 40px;
-}
-
-.nav-collapsed .clock-dial {
-  width: 40px;
-  height: 40px;
-}
-
-.nav-collapsed .clock-figure {
-  display: none;
-}
-
-.nav-collapsed .clock-caption,
 .nav-collapsed .nav-label,
 .nav-collapsed .user-text,
 .nav-collapsed .user-caret,
@@ -3216,5 +3105,588 @@ h3 {
 @media (prefers-reduced-motion: reduce) {
   .frame.fresh {
     animation: none;
+  }
+}
+
+/* ===================================================== full-site pass */
+
+/* --- the mark: viewfinder corners, amber lens -------------------------- */
+
+.logo {
+  flex: none;
+  display: block;
+}
+
+.logo-frame {
+  stroke: var(--text);
+}
+
+.logo-lens {
+  fill: var(--accent);
+}
+
+.logo-glint {
+  fill: var(--bg);
+}
+
+.brand {
+  gap: var(--sp-2);
+}
+
+/* --- the station clock -------------------------------------------------- */
+
+.station-clock {
+  display: grid;
+  gap: var(--sp-1);
+}
+
+.clock-time {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 30px;
+  line-height: 34px;
+  font-weight: 500;
+  letter-spacing: -0.03em;
+  color: var(--text);
+}
+
+.clock-seconds {
+  font-size: var(--fs-md);
+  line-height: var(--lh-md);
+  color: var(--accent);
+  letter-spacing: 0;
+}
+
+/* Fills over the minute; empties at the turn without animating back. */
+.clock-track {
+  display: block;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--surface-3);
+  overflow: hidden;
+}
+
+.clock-track i {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+  transition: width 1s linear;
+}
+
+.clock-date {
+  font-size: var(--fs-xs);
+  line-height: var(--lh-xs);
+  color: var(--text-2);
+}
+
+.clock-date::first-letter {
+  text-transform: uppercase;
+}
+
+/* --- menu groups ------------------------------------------------------- */
+
+.nav {
+  gap: var(--sp-3);
+}
+
+.nav-group {
+  display: grid;
+  gap: 2px;
+}
+
+.nav-group-label {
+  padding: 0 var(--sp-3) var(--sp-1);
+  font-size: var(--fs-xs);
+  line-height: var(--lh-xs);
+  color: var(--text-3);
+}
+
+.nav a {
+  height: auto;
+  min-height: 44px;
+  padding: 6px var(--sp-3);
+  align-items: center;
+}
+
+.nav-text {
+  display: grid;
+  min-width: 0;
+}
+
+.nav-text .nav-label {
+  font-size: var(--fs-md);
+  line-height: var(--lh-md);
+}
+
+.nav-hint {
+  font-size: var(--fs-xs);
+  line-height: var(--lh-xs);
+  color: var(--text-3);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nav a.active .nav-hint {
+  color: var(--text-2);
+}
+
+.nav-collapsed .nav-group-label,
+.nav-collapsed .nav-text,
+.nav-collapsed .station-clock {
+  display: none;
+}
+
+.nav-collapsed .nav {
+  gap: var(--sp-2);
+}
+
+.nav-collapsed .nav a {
+  min-height: var(--row);
+}
+
+@media (max-width: 860px) {
+  .nav-group-label,
+  .nav-text {
+    display: none;
+  }
+
+  .nav,
+  .nav-group {
+    display: flex;
+    gap: 2px;
+  }
+
+  .nav a {
+    min-height: var(--control);
+  }
+}
+
+/* --- sign-in: what the system is on the left, the form on the right ---- */
+
+.login {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  place-items: center;
+  gap: var(--sp-6);
+  padding: var(--sp-6);
+}
+
+.login-intro {
+  justify-self: end;
+  display: grid;
+  gap: var(--sp-5);
+  max-width: 420px;
+  animation: rise 480ms var(--ease-out) both;
+}
+
+.login-mark {
+  width: 88px;
+}
+
+/* The corners close in on the lens once, as a camera focusing. */
+.login-mark .logo-frame {
+  transform-origin: center;
+  animation: focus-in 700ms var(--ease-out) both;
+}
+
+.login-tagline {
+  margin: 0;
+  font-size: var(--fs-2xl);
+  line-height: var(--lh-2xl);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--text);
+}
+
+.login-points {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--sp-3);
+  color: var(--text-2);
+}
+
+.login-points li {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+}
+
+.login-points svg {
+  flex: none;
+  color: var(--text-3);
+}
+
+.login-card {
+  justify-self: start;
+  animation: rise 480ms 80ms var(--ease-out) both;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+@keyframes focus-in {
+  from {
+    transform: scale(1.35);
+    opacity: 0;
+  }
+}
+
+@media (max-width: 860px) {
+  .login {
+    grid-template-columns: minmax(0, 1fr);
+    padding: var(--sp-4);
+    gap: var(--sp-4);
+  }
+
+  .login-intro {
+    display: none;
+  }
+
+  .login-card {
+    justify-self: stretch;
+  }
+}
+
+/* --- page heads: the title and one line about the page ----------------- */
+
+.page-head {
+  align-items: flex-start;
+  margin-bottom: var(--sp-4);
+}
+
+.page-title {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.page-lead {
+  margin: 0;
+  max-width: 64ch;
+  font-size: var(--fs-sm);
+  line-height: var(--lh-sm);
+  color: var(--text-2);
+}
+
+/* A page arrives once, softly; nothing else moves on its own. */
+.page,
+.wall-page {
+  animation: page-in 220ms var(--ease-out) both;
+}
+
+@keyframes page-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+
+/* --- figures that filter ----------------------------------------------- */
+
+.stat-filter {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: var(--sp-2);
+  max-width: 760px;
+  margin-bottom: var(--sp-3);
+}
+
+.stat {
+  display: grid;
+  gap: 2px;
+  justify-items: start;
+  padding: var(--sp-3) var(--sp-4);
+  border: 1px solid transparent;
+  border-radius: var(--r-md);
+  background: var(--surface-1);
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background 120ms,
+    border-color 120ms;
+}
+
+.stat:hover {
+  background: var(--surface-2);
+}
+
+.stat[aria-pressed="true"] {
+  border-color: var(--border-strong);
+  background: var(--surface-2);
+}
+
+.stat-count {
+  font-size: var(--fs-xl);
+  line-height: var(--lh-xl);
+  font-weight: 600;
+  color: var(--text);
+}
+
+.stat-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--fs-sm);
+  color: var(--text-2);
+}
+
+/* A count that needs looking at: devices offline. */
+.stat.attention .stat-count {
+  color: var(--danger);
+}
+
+/* --- a button with a short menu ---------------------------------------- */
+
+.menu-button {
+  position: relative;
+}
+
+.menu-button-caret {
+  margin-left: -2px;
+  opacity: 0.8;
+}
+
+.menu-button-pop {
+  right: 0;
+  left: auto;
+  bottom: auto;
+  top: calc(100% + var(--sp-1));
+  min-width: 280px;
+  z-index: 50;
+}
+
+.menu-button-pop button {
+  align-items: flex-start;
+  padding: var(--sp-2);
+}
+
+.menu-button-pop svg {
+  margin-top: 1px;
+  color: var(--text-2);
+}
+
+.menu-item-text {
+  display: grid;
+  gap: 1px;
+}
+
+.menu-item-text small {
+  font-size: var(--fs-xs);
+  color: var(--text-3);
+}
+
+/* Menus and dialogs open from where they were asked for. */
+.menu-pop,
+.lang-pop {
+  animation: pop-in 140ms var(--ease-out) both;
+}
+
+.modal {
+  animation: dialog-in 180ms var(--ease-out) both;
+}
+
+.modal-backdrop {
+  animation: fade-in 180ms ease-out both;
+}
+
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+  }
+}
+
+@keyframes dialog-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.985);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+/* --- structure tree: a sign per level ---------------------------------- */
+
+.tree-label {
+  align-items: center;
+}
+
+.tree-icon {
+  flex: none;
+  color: var(--text-3);
+}
+
+.tree-row.active .tree-icon {
+  color: var(--accent);
+}
+
+.tree-level {
+  display: none;
+}
+
+/* --- camera tiles: viewfinder corners ---------------------------------- */
+
+.tile-corners,
+.tile-corners i {
+  position: absolute;
+  inset: 3px;
+  pointer-events: none;
+  z-index: 6;
+}
+
+.tile-corners {
+  opacity: 0;
+  transform: scale(1.03);
+  transition:
+    opacity 160ms var(--ease-out),
+    transform 160ms var(--ease-out);
+}
+
+.tile-corners::before,
+.tile-corners::after,
+.tile-corners i::before,
+.tile-corners i::after {
+  content: "";
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border: 0 solid var(--on-video);
+}
+
+.tile-corners::before {
+  top: 0;
+  left: 0;
+  border-top-width: 2px;
+  border-left-width: 2px;
+}
+
+.tile-corners::after {
+  right: 0;
+  bottom: 0;
+  border-right-width: 2px;
+  border-bottom-width: 2px;
+}
+
+.tile-corners i {
+  inset: 0;
+}
+
+.tile-corners i::before {
+  top: 0;
+  right: 0;
+  border-top-width: 2px;
+  border-right-width: 2px;
+}
+
+.tile-corners i::after {
+  bottom: 0;
+  left: 0;
+  border-bottom-width: 2px;
+  border-left-width: 2px;
+}
+
+.tile:hover .tile-corners,
+.tile:focus-visible .tile-corners,
+.tile.drop-target .tile-corners {
+  opacity: 1;
+  transform: none;
+}
+
+.tile.drop-target .tile-corners::before,
+.tile.drop-target .tile-corners::after,
+.tile.drop-target .tile-corners i::before,
+.tile.drop-target .tile-corners i::after {
+  border-color: var(--accent);
+}
+
+/* --- the empty wall ----------------------------------------------------- */
+
+.wall-empty {
+  align-self: stretch;
+  justify-self: stretch;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: var(--sp-2);
+  text-align: center;
+  color: var(--text-2);
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--r-md);
+}
+
+.wall-empty strong {
+  font-size: var(--fs-lg);
+  font-weight: 500;
+  color: var(--text);
+  max-width: 44ch;
+}
+
+.wall-empty span:last-child {
+  font-size: var(--fs-sm);
+  max-width: 44ch;
+}
+
+.wall-empty-frame {
+  margin-bottom: var(--sp-2);
+  opacity: 0.9;
+}
+
+/* --- staff: the photo column ------------------------------------------- */
+
+.staff-table .col-photos {
+  width: 88px;
+}
+
+.no-photo {
+  gap: 4px;
+  margin-left: 0;
+}
+
+@media (max-width: 860px) {
+  .staff-table .col-photos {
+    width: 0;
+  }
+
+  .staff-table th:nth-child(5),
+  .staff-table td:nth-child(5) {
+    padding: 0;
+    visibility: hidden;
+  }
+
+  .stat-filter {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page,
+  .wall-page,
+  .menu-pop,
+  .lang-pop,
+  .modal,
+  .modal-backdrop,
+  .login-intro,
+  .login-card,
+  .login-mark .logo-frame {
+    animation: none;
+  }
+
+  .tile-corners,
+  .clock-track i,
+  .stat {
+    transition: none;
   }
 }

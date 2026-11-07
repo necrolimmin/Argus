@@ -21,8 +21,10 @@ import { api } from "../api/client";
 import { keys, useDevices, useUnits } from "../api/queries";
 import type { Camera, Device, Vendor } from "../api/types";
 import { DirectionBadge } from "../components/DirectionBadge";
+import { MenuButton } from "../components/MenuButton";
 import { Confirm } from "../components/Modal";
 import { type RowAction, RowActions } from "../components/RowActions";
+import { StatFilter } from "../components/StatFilter";
 import { EmptyState, ErrorState, Skeleton } from "../components/States";
 import { intlLocale } from "../i18n";
 import { errorText } from "../lib/errors";
@@ -163,26 +165,60 @@ export function DevicesPage() {
   return (
     <div className="page">
       <div className="page-head">
-        <h1>{t("devices.title")}</h1>
-        {hasData && <span className="muted num">{devices.length}</span>}
+        <div className="page-title">
+          <h1>{t("devices.title")}</h1>
+          <p className="page-lead">{t("devices.lead")}</p>
+        </div>
         <span className="spacer" />
         <button className="btn btn-ghost" onClick={() => setDialog({ kind: "creds" })}>
           <KeyRound size={16} />
           {t("devices.credentials")}
         </button>
-        <button className="btn btn-ghost" onClick={() => setDialog({ kind: "import" })}>
-          <FileSpreadsheet size={16} />
-          {t("devices.import")}
-        </button>
-        <button className="btn" onClick={() => setDialog({ kind: "scan" })}>
-          <Radar size={16} />
-          {t("devices.scanNetwork")}
-        </button>
-        <button className="btn btn-primary" onClick={() => setDialog({ kind: "add" })}>
-          <Plus size={16} />
-          {t("devices.add")}
-        </button>
+        {/* One way in, three ways to add: the toolbar keeps a single main action. */}
+        <MenuButton
+          label={
+            <>
+              <Plus size={16} />
+              {t("devices.add")}
+            </>
+          }
+          items={[
+            {
+              icon: Plus,
+              label: t("devices.addByIp"),
+              hint: t("devices.addByIpHint"),
+              onClick: () => setDialog({ kind: "add" }),
+            },
+            {
+              icon: Radar,
+              label: t("devices.scanNetwork"),
+              hint: t("devices.scanHint"),
+              onClick: () => setDialog({ kind: "scan" }),
+            },
+            {
+              icon: FileSpreadsheet,
+              label: t("devices.import"),
+              hint: t("devices.importHint"),
+              onClick: () => setDialog({ kind: "import" }),
+            },
+          ]}
+        />
       </div>
+
+      {devices.length > 0 && (
+        <StatFilter
+          label={t("devices.colStatus")}
+          value={status}
+          onChange={setStatus}
+          stats={(["all", "online", "offline", "unknown"] as Status[]).map((s) => ({
+            key: s,
+            label: s === "all" ? t("devices.title") : t(`devices.status.${s}`),
+            count: s === "all" ? devices.length : devices.filter((d) => statusOf(d) === s).length,
+            dot: s === "all" ? undefined : s,
+            attention: s === "offline",
+          }))}
+        />
+      )}
 
       {devices.length > 0 && (
         <div className="filters">
@@ -195,22 +231,17 @@ export function DevicesPage() {
               onChange={(e) => setQuery(e.target.value)}
             />
           </div>
-          <div className="segmented" role="group" aria-label={t("devices.colStatus")}>
-            {(["all", "online", "offline", "unknown"] as Status[]).map((s) => (
-              <button key={s} aria-pressed={status === s} onClick={() => setStatus(s)}>
-                {s !== "all" && <i className={`dot ${s}`} />}
-                {t(`devices.status.${s}`)}
-              </button>
-            ))}
-          </div>
-          <select className="select fit" value={vendor} onChange={(e) => setVendor(e.target.value)}>
-            <option value="">{t("devices.allVendors")}</option>
-            {vendorsPresent.map((v) => (
-              <option key={v} value={v}>
-                {t(`devices.vendors.${v}`)}
-              </option>
-            ))}
-          </select>
+          {/* Only offer a choice when there is one to make. */}
+          {vendorsPresent.length > 1 && (
+            <select className="select fit" value={vendor} onChange={(e) => setVendor(e.target.value)}>
+              <option value="">{t("devices.allVendors")}</option>
+              {vendorsPresent.map((v) => (
+                <option key={v} value={v}>
+                  {t(`devices.vendors.${v}`)}
+                </option>
+              ))}
+            </select>
+          )}
           <select className="select fit narrow" value={unitId} onChange={(e) => setUnitId(e.target.value)}>
             <option value="">{t("devices.allUnits")}</option>
             {unitOptions.map((u) => (

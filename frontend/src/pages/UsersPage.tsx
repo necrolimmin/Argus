@@ -55,8 +55,10 @@ export function UsersPage() {
   return (
     <div className="page">
       <div className="page-head">
-        <h1>{t("users.title")}</h1>
-        {hasData && <span className="muted num">{users.length}</span>}
+        <div className="page-title">
+          <h1>{t("users.title")}</h1>
+          <p className="page-lead">{t("users.lead")}</p>
+        </div>
         <span className="spacer" />
         <button className="btn btn-primary" onClick={() => setEditing("new")}>
           <Plus size={16} />

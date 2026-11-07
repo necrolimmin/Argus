@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { ChevronLeft, ChevronRight, ScanFace, Search, SquareDashed } from "lucide-react";
+import { ChevronLeft, ChevronRight, ScanFace, Search } from "lucide-react";
 import { type CSSProperties, type DragEvent, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -9,6 +9,7 @@ import type { Camera } from "../api/types";
 import { CameraTile, FullscreenCamera } from "../components/CameraTile";
 import { DirectionBadge } from "../components/DirectionBadge";
 import { EventsDock } from "../components/EventsDock";
+import { Logo } from "../components/Layout";
 import { UnitPicker } from "../components/UnitPicker";
 import { isAdmin, type Layout, useAuth, useWall } from "../lib/store";
 import { unitPath } from "../lib/tree";
@@ -285,8 +286,11 @@ export function CamerasPage() {
 
         <div className="wall-body" ref={wallRef}>
           {selected.length === 0 ? (
-            <div className={`empty center${dropTarget === 0 ? " drop-target" : ""}`} {...dropOn(0)}>
-              <SquareDashed size={40} strokeWidth={1.4} />
+            <div className={`wall-empty${dropTarget === 0 ? " drop-target" : ""}`} {...dropOn(0)}>
+              <span className="wall-empty-frame" aria-hidden>
+                <Logo size={56} />
+              </span>
+              <strong>{t("cameras.lead")}</strong>
               <span>{t("cameras.nothingSelected")}</span>
             </div>
           ) : (

@@ -1,9 +1,12 @@
-import { ChevronRight, Pencil, Plus, Trash2 } from "lucide-react";
+import { Building2, ChevronRight, Factory, GitFork, LayoutGrid, Pencil, Plus, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { LEVELS, type OrgUnit } from "../api/types";
 import { ancestry, buildTree, type TreeNode } from "../lib/tree";
+
+// Each level has its own sign, so the depth of a unit reads at a glance.
+const LEVEL_ICON = { company: Building2, branch: GitFork, enterprise: Factory, section: LayoutGrid };
 
 interface Props {
   units: OrgUnit[];
@@ -60,6 +63,11 @@ export function OrgTree({ units, selectedId, onSelect, count, onAddChild, onRena
   );
 }
 
+function LevelIcon({ level }: { level: TreeNode["level"] }) {
+  const Icon = LEVEL_ICON[level];
+  return <Icon size={14} aria-hidden className={`tree-icon ${level}`} />;
+}
+
 interface BranchProps extends Omit<Props, "units"> {
   nodes: TreeNode[];
   open: Set<string>;
@@ -89,6 +97,7 @@ function Branch({ nodes, open, toggle, root, ...p }: BranchProps) {
                 <ChevronRight size={15} />
               </button>
               <button className="tree-label" onClick={() => p.onSelect(n.id)} title={n.name}>
+                <LevelIcon level={n.level} />
                 <span className="tree-name">{n.name}</span>
                 <span className="tree-level">{t(`levels.${n.level}`)}</span>
                 {p.count && <span className="tree-count">{n[p.count]}</span>}

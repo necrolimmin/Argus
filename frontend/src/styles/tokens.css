@@ -89,12 +89,6 @@
   --row: 36px;
   --ease-out: cubic-bezier(0.2, 0.7, 0.2, 1);
 
-  /* The wall clock in the sidebar, in the theme's own colours. */
-  --clock-face: var(--surface-2);
-  --clock-rim: var(--text);
-  --clock-minute: var(--text-2);
-  --clock-second: var(--accent);
-
   --sidebar: 236px;
   --sidebar-collapsed: 56px;
   --aside: 248px;

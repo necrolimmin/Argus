@@ -111,6 +111,10 @@ function TileBody({
           <span>{t("cameras.disabled")}</span>
         </div>
       )}
+      {/* Viewfinder corners: they close in on the picture under the pointer. */}
+      <span className="tile-corners" aria-hidden>
+        <i />
+      </span>
       {/* The camera's name on a solid scrim, readable on any frame. */}
       <div className="hud">
         <span className="hud-chip">

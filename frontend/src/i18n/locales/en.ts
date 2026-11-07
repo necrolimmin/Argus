@@ -3,6 +3,13 @@ import type { Locale } from "./ru";
 const en: Locale = {
   langName: "English",
   nav: {
+    groupWatch: "Monitoring",
+    groupManage: "Management",
+    groupSystem: "System",
+    hintCameras: "Video and events",
+    hintDevices: "Cameras and recorders",
+    hintOrg: "People and structure",
+    hintApi: "Links to other systems",
     cameras: "Cameras",
     devices: "Devices",
     org: "Staff & organization",
@@ -58,12 +65,17 @@ const en: Locale = {
     none: "No direction",
   },
   login: {
+    tagline: "Video surveillance and face-based access log",
+    point1: "Cameras of any make on one wall",
+    point2: "Recognises staff at entrances and exits",
+    point3: "Runs in your own network, no cloud",
     title: "Sign in to Argus",
     username: "Username",
     password: "Password",
     submit: "Sign in",
   },
   cameras: {
+    lead: "Pick a unit and tick cameras to put them on the wall.",
     structure: "Structure",
     pickUnit: "Pick a company, branch, enterprise or section to see its cameras here.",
     list: "Cameras",
@@ -103,6 +115,11 @@ const en: Locale = {
     reconnecting: "Reconnecting…",
   },
   devices: {
+    lead: "Cameras and recorders connected to Argus.",
+    addByIp: "By IP address",
+    addByIpHint: "One camera or recorder",
+    scanHint: "Find devices on the network",
+    importHint: "A list from an .xlsx or .csv file",
     title: "Devices",
     add: "Add",
     scanNetwork: "Scan network",
@@ -276,6 +293,10 @@ const en: Locale = {
     },
   },
   org: {
+    lead: "Your organisation's structure and the people the system recognises.",
+    photosCol: "Photos",
+    noPhoto: "No photo",
+    noPhotoHint: "Without a photo the system cannot recognise this person",
     addCompany: "Add company",
     emptyStructure: "Start with a company; branches, enterprises and sections go inside it.",
     rename: "Rename",
@@ -313,6 +334,7 @@ const en: Locale = {
     photoAdded: "Photo added",
   },
   users: {
+    lead: "Who can sign in to Argus and what they can see.",
     title: "Users",
     add: "Add user",
     username: "Username",
