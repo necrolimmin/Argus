@@ -171,6 +171,7 @@ export function AddDeviceModal({ defaultUnitId, preset, onClose }: Props) {
                 type="button"
                 key={v.id}
                 aria-pressed={vendor === v.id}
+                title={t(`devices.vendors.${v.id}`)}
                 onClick={() => {
                   touch(setVendor)(v.id);
                   setPort(v.defaultPort);

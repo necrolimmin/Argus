@@ -6,6 +6,7 @@ import { useTranslation } from "react-i18next";
 import { api } from "../api/client";
 import { keys, useCameras, useUnits } from "../api/queries";
 import type { Camera } from "../api/types";
+import { GroupCheck } from "../components/CameraAccess";
 import { CameraTile, FullscreenCamera } from "../components/CameraTile";
 import { DirectionBadge } from "../components/DirectionBadge";
 import { EventsDock } from "../components/EventsDock";
@@ -131,7 +132,8 @@ export function CamerasPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slots.length, perPage, selected.length]);
 
-  const allListedSelected = listed.length > 0 && listed.every((c) => wall.cameraIds.includes(c.id));
+  const listedOn = listed.filter((c) => wall.cameraIds.includes(c.id)).length;
+  const allListedSelected = listed.length > 0 && listedOn === listed.length;
   const toggleAll = () => {
     const ids = listed.map((c) => c.id);
     if (allListedSelected) wall.removeCameras(ids);
@@ -178,13 +180,22 @@ export function CamerasPage() {
         )}
 
         <section className="aside-section">
+          {/* One tick above the column of ticks selects the whole list: no
+              button label to outgrow the panel in a longer language. */}
           <div className="aside-head">
+            {listed.length > 0 && (
+              <GroupCheck
+                state={allListedSelected ? "all" : listedOn > 0 ? "some" : "none"}
+                onChange={toggleAll}
+                label={allListedSelected ? t("cameras.clear") : t("cameras.selectAll")}
+              />
+            )}
             <h2>{viewer ? t("cameras.mine") : t("cameras.list")}</h2>
             <span className="spacer" />
             {listed.length > 0 && (
-              <button className="btn btn-ghost btn-sm" onClick={toggleAll}>
-                {allListedSelected ? t("cameras.clear") : t("cameras.selectAll")}
-              </button>
+              <span className="aside-count num">
+                {listedOn}/{listed.length}
+              </span>
             )}
           </div>
           {viewer && all.isSuccess && all.data.length === 0 ? (

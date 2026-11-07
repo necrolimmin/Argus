@@ -6,13 +6,13 @@ import { useCameras, useUnits } from "../api/queries";
 import type { Camera } from "../api/types";
 import { unitPath } from "../lib/tree";
 
-/** A checkbox that also shows "some of these", for a unit's group. */
-function GroupCheck({ state, onChange, label }: { state: "all" | "some" | "none"; onChange: () => void; label: string }) {
+/** A checkbox that also shows "some of these", for a group of items. */
+export function GroupCheck({ state, onChange, label }: { state: "all" | "some" | "none"; onChange: () => void; label: string }) {
   const ref = useRef<HTMLInputElement>(null);
   useEffect(() => {
     if (ref.current) ref.current.indeterminate = state === "some";
   }, [state]);
-  return <input ref={ref} type="checkbox" checked={state === "all"} onChange={onChange} aria-label={label} />;
+  return <input ref={ref} type="checkbox" checked={state === "all"} onChange={onChange} aria-label={label} title={label} />;
 }
 
 /**

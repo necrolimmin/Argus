@@ -693,9 +693,24 @@ h3 {
 }
 
 .aside-head h2 {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   font-size: var(--fs-sm);
   font-weight: 600;
   color: var(--text-2);
+}
+
+.aside-head input[type="checkbox"] {
+  flex: none;
+  margin: 0;
+}
+
+.aside-count {
+  flex: none;
+  font-size: var(--fs-xs);
+  color: var(--text-3);
 }
 
 .aside-head .spacer {
@@ -1558,7 +1573,7 @@ h3 {
 
 .vendor-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(118px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(128px, 1fr));
   gap: var(--sp-2);
 }
 
@@ -1571,6 +1586,9 @@ h3 {
   cursor: pointer;
   font-weight: 500;
   padding: 0 var(--sp-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .vendor-grid button:hover {
@@ -2207,7 +2225,7 @@ h3 {
 }
 
 .devices-table .col-status {
-  width: 124px;
+  width: 148px;
 }
 
 .devices-table .col-actions {
@@ -2469,18 +2487,13 @@ h3 {
 }
 
 @media (max-width: 860px) {
-  /* Status segments: a full-width row of equal parts, under the search. */
+  /* Status segments: a full-width row of equal parts, under the search;
+     never narrower than their words, so a long language scrolls instead. */
   .filters .segmented {
     flex: 1 1 100%;
     display: grid;
     grid-auto-flow: column;
-    grid-auto-columns: minmax(0, 1fr);
-  }
-
-  .filters .segmented button {
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    grid-auto-columns: minmax(max-content, 1fr);
   }
 
   .filters .search {
@@ -2662,7 +2675,7 @@ h3 {
 }
 
 .users-table .col-status {
-  width: 160px;
+  width: 196px;
 }
 
 .users-table .col-actions {
@@ -2693,7 +2706,7 @@ h3 {
   }
 
   .users-table .col-status {
-    width: 128px;
+    width: 188px;
   }
 
   .users-table th:nth-child(2),
@@ -4094,4 +4107,29 @@ h3 {
   .patrol-track i {
     animation: none;
   }
+}
+
+/* A status in a table cell is an inline-flex chip, which a cell's ellipsis
+   cannot shorten: in a longer language it wraps instead of being cut off. */
+.table td .status {
+  max-width: 100%;
+  white-space: normal;
+  line-height: var(--lh-sm);
+}
+
+/* A row of choices wider than the screen scrolls sideways; its buttons keep
+   their words whole instead of being squeezed and cut at both ends. */
+.segmented {
+  max-width: 100%;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.segmented::-webkit-scrollbar {
+  display: none;
+}
+
+.segmented button {
+  flex: none;
+  white-space: nowrap;
 }
