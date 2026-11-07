@@ -2,6 +2,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import {
   Building2,
   Check,
+  ChevronsUpDown,
   Cctv,
   CircleUserRound,
   KeyRound,
@@ -20,7 +21,7 @@ import { useTranslation } from "react-i18next";
 import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 
 import { setToken } from "../api/client";
-import { LANGUAGES, setLanguage } from "../i18n";
+import { intlLocale, LANGUAGES, setLanguage } from "../i18n";
 import { isAdmin, useAuth, useUi } from "../lib/store";
 import { PasswordModal } from "../pages/PasswordModal";
 
@@ -114,6 +115,100 @@ export function ThemeToggle() {
   );
 }
 
+function initials(name: string) {
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((w) => w[0].toUpperCase())
+    .join("");
+}
+
+// Hour marks all round; figures only at the quarters, as on a wall clock.
+const MARKS = Array.from({ length: 12 }, (_, i) => i);
+const QUARTERS = [
+  { n: 12, x: 100, y: 46 },
+  { n: 3, x: 154, y: 100 },
+  { n: 6, x: 100, y: 154 },
+  { n: 9, x: 46, y: 100 },
+];
+
+interface HandProps {
+  deg: number;
+  length: number;
+  tail: number;
+  width: number;
+  className: string;
+}
+
+/** A hand from a little behind the centre out to `length`, at `deg` clockwise from the top. */
+function Hand({ deg, length, tail, width, className }: HandProps) {
+  return (
+    <line
+      className={className}
+      x1="100"
+      y1={100 + tail}
+      x2="100"
+      y2={100 - length}
+      strokeWidth={width}
+      transform={`rotate(${deg} 100 100)`}
+    />
+  );
+}
+
+/**
+ * The station clock: a wall-clock dial in the site's own colours, figures at
+ * the quarters, three hands; the second hand is the brand amber. The exact time and the date sit beside it
+ * for matching against event times.
+ */
+function StationClock() {
+  const { i18n } = useTranslation();
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const tick = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(tick);
+  }, []);
+  const locale = intlLocale();
+  const h = now.getHours() % 12;
+  const m = now.getMinutes();
+  const sec = now.getSeconds();
+  const time = now.toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit", hour12: false });
+  const date = now.toLocaleDateString(locale, { weekday: "short", day: "numeric", month: "long" });
+  return (
+    <div className="station-clock" key={i18n.language}>
+      <svg className="clock-dial" viewBox="0 0 200 200" role="img" aria-label={`${time}, ${date}`}>
+        <circle className="clock-face" cx="100" cy="100" r="95" />
+        {MARKS.map((k) => (
+          <line
+            key={k}
+            className={k % 3 === 0 ? "clock-mark quarter" : "clock-mark"}
+            x1="100"
+            y1="13"
+            x2="100"
+            y2={k % 3 === 0 ? 27 : 24}
+            transform={`rotate(${k * 30} 100 100)`}
+          />
+        ))}
+        {QUARTERS.map((q) => (
+          <text key={q.n} className="clock-figure" x={q.x} y={q.y}>
+            {q.n}
+          </text>
+        ))}
+        <Hand className="clock-hand hour" deg={(h + m / 60) * 30} length={52} tail={0} width={9} />
+        <Hand className="clock-hand minute" deg={(m + sec / 60) * 6} length={76} tail={0} width={6} />
+        <Hand className="clock-hand second" deg={sec * 6} length={80} tail={0} width={3} />
+        <circle className="clock-cap" cx="100" cy="100" r="9" />
+      </svg>
+      <div className="clock-caption">
+        <time className="clock-time" dateTime={now.toISOString()}>
+          {time}
+        </time>
+        <span className="clock-date">{date}</span>
+      </div>
+    </div>
+  );
+}
+
 function UserMenu() {
   const { t } = useTranslation();
   const qc = useQueryClient();
@@ -121,6 +216,8 @@ function UserMenu() {
   const [open, setOpen] = useState(false);
   const [password, setPassword] = useState(false);
   const ref = useDismiss(open, () => setOpen(false));
+  const name = user?.full_name || user?.username || "";
+  const role = t(`users.roles.${user?.role ?? "operator"}`);
 
   const logout = () => {
     setToken(null);
@@ -130,15 +227,25 @@ function UserMenu() {
 
   return (
     <div className="menu" ref={ref}>
-      <button className="icon-btn" onClick={() => setOpen((o) => !o)} aria-expanded={open} aria-label={user?.username}>
-        <CircleUserRound size={20} />
+      <button
+        type="button"
+        className="user-card"
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+        aria-haspopup="menu"
+        title={name}
+      >
+        <span className="user-avatar" aria-hidden>
+          {initials(name) || <CircleUserRound size={18} />}
+        </span>
+        <span className="user-text">
+          <span className="user-name">{name}</span>
+          <span className="user-role">{role}</span>
+        </span>
+        <ChevronsUpDown size={14} aria-hidden className="user-caret" />
       </button>
       {open && (
-        <div className="menu-pop">
-          <div className="who">
-            {user?.full_name || user?.username}
-            <small>{t(`users.roles.${user?.role ?? "operator"}`)}</small>
-          </div>
+        <div className="menu-pop" role="menu">
           {isAdmin(user) && (
             <Link to="/users" onClick={() => setOpen(false)}>
               <Users size={16} />
@@ -204,7 +311,10 @@ export function Layout() {
   return (
     <div className={`app${navCollapsed ? " nav-collapsed" : ""}`}>
       <aside className="sidebar">
-        <Brand />
+        <div className="sidebar-head">
+          <Brand />
+          <StationClock />
+        </div>
         <nav className="nav" ref={navRef}>
           {pill && (
             <span
@@ -216,7 +326,7 @@ export function Layout() {
           {TABS.filter((tab) => admin || !tab.adminOnly).map(({ to, icon: Icon, label }) => (
             <NavLink key={to} to={to} title={navCollapsed ? t(label) : undefined}>
               <Icon size={18} aria-hidden />
-              <span>{t(label)}</span>
+              <span className="nav-label">{t(label)}</span>
             </NavLink>
           ))}
         </nav>
@@ -224,11 +334,12 @@ export function Layout() {
           <div className="sidebar-row">
             <LanguageSwitch />
             <ThemeToggle />
-            <UserMenu />
-            <button className="icon-btn nav-toggle" onClick={toggleNav} title={toggleLabel} aria-label={toggleLabel}>
+            <span className="spacer" />
+            <button type="button" className="icon-btn nav-toggle" onClick={toggleNav} title={toggleLabel} aria-label={toggleLabel}>
               {navCollapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
             </button>
           </div>
+          <UserMenu />
         </div>
       </aside>
       <main className="main">

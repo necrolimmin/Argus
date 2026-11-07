@@ -20,7 +20,11 @@ interface Props {
   defaultUnitId: string | null;
 }
 
-/** "Recognized" and "Unrecognized" panels under the camera wall. */
+/**
+ * "Recognized" and "Unrecognized" under the camera wall, each a filmstrip of
+ * frames read left to right from the newest, like the timeline of a
+ * recorder. A lane with nothing today is one line, not an empty box.
+ */
 export function EventsDock({ cameraIds, defaultUnitId }: Props) {
   const { t } = useTranslation();
   const admin = isAdmin(useAuth((s) => s.user));
@@ -29,116 +33,98 @@ export function EventsDock({ cameraIds, defaultUnitId }: Props) {
   const [zoom, setZoom] = useState<string | null>(null);
   const [adding, setAdding] = useState<FaceEvent | null>(null);
 
+  const isEmpty = (kind: EventKind) => !feeds[kind].loading && feeds[kind].items.length === 0;
+  const quiet = isEmpty("recognized") && isEmpty("unknown");
+
+  const head = (kind: EventKind) => (
+    <div className="lane-head">
+      <span className={`live-dot${connected ? "" : " off"}`} title={connected ? t("events.live") : t("events.reconnecting")} />
+      <h2>{t(`events.${kind}`)}</h2>
+      <span className="count">{feeds[kind].items.length}</span>
+    </div>
+  );
+
   if (collapsed) {
     return (
       <section className="dock collapsed">
-        <div className="dock-head grow">
-          <span className={`live-dot${connected ? "" : " off"}`} />
-          <h2>{t("events.recognized")}</h2>
-          <span className="count">{feeds.recognized.items.length}</span>
-          <h2 className="ml-3">{t("events.unknown")}</h2>
-          <span className="count">{feeds.unknown.items.length}</span>
-          <span className="spacer" />
-          <button className="btn btn-ghost btn-sm" onClick={() => setCollapsed(false)}>
-            <ChevronUp size={15} />
-            {t("events.show")}
-          </button>
-        </div>
+        {head("recognized")}
+        {head("unknown")}
+        <span className="spacer" />
+        <button className="btn btn-ghost btn-sm" onClick={() => setCollapsed(false)}>
+          <ChevronUp size={15} />
+          {t("events.show")}
+        </button>
       </section>
     );
   }
 
-  const column = (kind: EventKind) => {
+  const lane = (kind: EventKind) => {
     const feed = feeds[kind];
     return (
-      <div className="dock-col" aria-live="polite">
-        <div className="dock-head">
-          <span
-            className={`live-dot${connected ? "" : " off"}`}
-            title={connected ? t("events.live") : t("events.reconnecting")}
-          />
-          <h2>{t(`events.${kind}`)}</h2>
-          <span className="count">{feed.items.length}</span>
-          <span className="spacer" />
-          {kind === "unknown" && (
-            <button
-              className="icon-btn sm"
-              onClick={() => setCollapsed(true)}
-              aria-label={t("events.hide")}
-              title={t("events.hide")}
-            >
-              <ChevronDown size={16} />
-            </button>
-          )}
-        </div>
-        <div className="dock-list">
-          {!feed.loading && feed.items.length === 0 && (
-            <div className="dock-empty">{t(kind === "recognized" ? "events.noRecognized" : "events.noUnknown")}</div>
-          )}
-          {feed.items.map((e) =>
-            kind === "recognized" ? (
-              <div key={e.id} className={`event${freshIds.has(e.id) ? " fresh" : ""}`}>
-                <Thumb className="event-face" src={e.image_url} compact />
-                <div className="event-main">
-                  <div className="event-name">{e.employee?.full_name ?? "—"}</div>
-                  <div className="event-sub">{[e.employee?.position, e.camera_name].filter(Boolean).join(" · ")}</div>
-                </div>
-                <div className="event-side">
-                  <span className="event-time num">{time(e.occurred_at)}</span>
-                  <DirectionBadge direction={e.direction} />
-                </div>
-              </div>
-            ) : (
-              // The column title already says "unrecognized": each row leads
-              // with its time and keeps the add action to one small button.
-              <div key={e.id} className={`event unknown${freshIds.has(e.id) ? " fresh" : ""}`}>
-                <button
-                  className="event-shot"
-                  onClick={() => setZoom(e.image_url)}
-                  aria-label={t("events.notRecognized")}
-                >
-                  <Thumb src={e.image_url} compact />
-                </button>
-                <div className="event-main">
-                  <div className="event-name num">{time(e.occurred_at)}</div>
-                  <div className="event-sub">
-                    {e.linked_employee_name ? t("events.linked", { name: e.linked_employee_name }) : e.camera_name}
-                  </div>
-                </div>
-                <div className="event-side">
-                  <DirectionBadge direction={e.direction} />
+      <div className={`lane${isEmpty(kind) ? " lane-quiet" : ""}`} aria-live="polite">
+        {head(kind)}
+        {isEmpty(kind) ? (
+          <p className="lane-empty">{t(kind === "recognized" ? "events.noRecognized" : "events.noUnknown")}</p>
+        ) : (
+          <div className="strip">
+            {feed.items.map((e) =>
+              kind === "recognized" ? (
+                <figure key={e.id} className={`frame person${freshIds.has(e.id) ? " fresh" : ""}`} data-direction={e.direction}>
+                  <button className="frame-shot" onClick={() => setZoom(e.image_url)} aria-label={e.employee?.full_name ?? ""}>
+                    <Thumb src={e.face_url || e.image_url} compact />
+                  </button>
+                  <figcaption>
+                    <span className="frame-time num">{time(e.occurred_at)}</span>
+                    <span className="frame-title">{e.employee?.full_name ?? "—"}</span>
+                    <span className="frame-meta">
+                      <DirectionBadge direction={e.direction} iconOnly />
+                      {e.camera_name}
+                    </span>
+                  </figcaption>
+                </figure>
+              ) : (
+                <figure key={e.id} className={`frame${freshIds.has(e.id) ? " fresh" : ""}`} data-direction={e.direction}>
+                  <button className="frame-shot" onClick={() => setZoom(e.image_url)} aria-label={t("events.notRecognized")}>
+                    <Thumb src={e.image_url} compact />
+                  </button>
+                  <figcaption>
+                    <span className="frame-time num">{time(e.occurred_at)}</span>
+                    <span className="frame-meta">
+                      <DirectionBadge direction={e.direction} iconOnly />
+                      {e.linked_employee_name ? t("events.linked", { name: e.linked_employee_name }) : e.camera_name}
+                    </span>
+                  </figcaption>
                   {admin && e.face_url && !e.linked_employee_name && (
                     <button
-                      className="icon-btn sm"
+                      className="icon-btn sm frame-add"
                       onClick={() => setAdding(e)}
                       title={t("events.addAsEmployee")}
                       aria-label={t("events.addAsEmployee")}
                     >
-                      <UserPlus size={16} />
+                      <UserPlus size={15} />
                     </button>
                   )}
-                </div>
-              </div>
-            ),
-          )}
-          {feed.hasMore && (
-            <button className="btn btn-ghost btn-sm more" onClick={() => loadMore(kind)} disabled={feed.loading}>
-              {t("common.loadMore")}
-            </button>
-          )}
-        </div>
+                </figure>
+              ),
+            )}
+            {feed.hasMore && (
+              <button className="btn btn-ghost btn-sm strip-more" onClick={() => loadMore(kind)} disabled={feed.loading}>
+                {t("common.loadMore")}
+              </button>
+            )}
+          </div>
+        )}
       </div>
     );
   };
 
-  const isEmpty = (kind: EventKind) => !feeds[kind].loading && feeds[kind].items.length === 0;
-  const narrow =
-    isEmpty("recognized") && !isEmpty("unknown") ? " left-empty" : isEmpty("unknown") && !isEmpty("recognized") ? " right-empty" : "";
-
   return (
-    <section className={`dock${narrow}`}>
-      {column("recognized")}
-      {column("unknown")}
+    <section className={`dock${quiet ? " quiet" : ""}`}>
+      {lane("recognized")}
+      {lane("unknown")}
+      <button className="icon-btn sm dock-hide" onClick={() => setCollapsed(true)} aria-label={t("events.hide")} title={t("events.hide")}>
+        <ChevronDown size={16} />
+      </button>
       {zoom &&
         createPortal(
           <div className="lightbox" onClick={() => setZoom(null)} role="dialog">

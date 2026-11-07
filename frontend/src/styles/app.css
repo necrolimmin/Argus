@@ -125,7 +125,7 @@ h3 {
   white-space: nowrap;
 }
 
-.nav a span {
+.nav a .nav-label {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -177,7 +177,7 @@ h3 {
 }
 
 .nav-collapsed .brand > span:not(.brand-mark),
-.nav-collapsed .nav a span {
+.nav-collapsed .nav a .nav-label {
   display: none;
 }
 
@@ -973,64 +973,6 @@ h3 {
   background: var(--overlay);
 }
 
-/* ---------------------------------------------------------- events dock */
-
-.dock {
-  border-top: 1px solid var(--border);
-  background: var(--surface-1);
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  flex: none;
-}
-
-.dock.collapsed {
-  height: auto;
-  display: flex;
-}
-
-.dock-col {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-  min-height: 0;
-  max-height: 280px;
-}
-
-/* An empty column gives its width to the one that has events. */
-.dock.left-empty {
-  grid-template-columns: minmax(200px, 0.35fr) 1fr;
-}
-
-.dock.right-empty {
-  grid-template-columns: 1fr minmax(200px, 0.35fr);
-}
-
-.dock-col + .dock-col {
-  border-left: 1px solid var(--border);
-}
-
-.dock-head {
-  display: flex;
-  align-items: center;
-  min-height: 42px;
-  gap: var(--sp-2);
-  padding: var(--sp-2) var(--sp-3) var(--sp-2) var(--sp-3);
-}
-
-.dock-head h2 {
-  font-size: var(--fs-md);
-}
-
-.dock-head .count {
-  font-size: var(--fs-xs);
-  color: var(--text-2);
-  font-variant-numeric: tabular-nums;
-}
-
-.dock-head .spacer {
-  flex: 1;
-}
-
 .live-dot {
   width: 7px;
   height: 7px;
@@ -1044,99 +986,10 @@ h3 {
   animation: pulse 1.2s ease-in-out infinite;
 }
 
-.dock-list {
-  overflow: auto;
-  padding: 0 var(--sp-2) var(--sp-2);
-  min-height: 0;
-  flex: 1;
-}
-
-.dock-empty {
-  padding: 0 var(--sp-2) var(--sp-3);
-  color: var(--text-2);
-  font-size: var(--fs-sm);
-}
-
-.event {
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  gap: var(--sp-3);
-  align-items: center;
-  padding: var(--sp-2) var(--sp-2);
-  border-radius: var(--r-sm);
-}
-
-.event + .event {
-  border-top: 1px solid var(--border);
-}
-
-.event.fresh {
-  animation: fresh 2.4s ease-out;
-}
-
 @keyframes fresh {
   from {
     background: var(--surface-3);
   }
-}
-
-.event-face {
-  width: 40px;
-  height: 40px;
-  border-radius: var(--r-xs);
-  object-fit: cover;
-  background: var(--video);
-  display: block;
-}
-
-.event-shot {
-  width: 96px;
-  aspect-ratio: 16 / 9;
-  border-radius: var(--r-xs);
-  object-fit: cover;
-  background: var(--video);
-  display: block;
-  cursor: zoom-in;
-  border: 0;
-  padding: 0;
-}
-
-.event-shot img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-  border-radius: inherit;
-}
-
-.event-main {
-  min-width: 0;
-}
-
-.event-name {
-  font-weight: 500;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.event-sub {
-  font-size: var(--fs-xs);
-  color: var(--text-2);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.event-side {
-  display: grid;
-  justify-items: end;
-  gap: 2px;
-}
-
-.event-time {
-  font-variant-numeric: tabular-nums;
-  font-weight: 500;
 }
 
 .lightbox {
@@ -1550,7 +1403,7 @@ h3 {
   }
 
   .sidebar .brand,
-  .nav a span,
+  .nav a .nav-label,
   .nav-toggle {
     display: none;
   }
@@ -1613,20 +1466,6 @@ h3 {
   .wall-body {
     flex: none;
     height: 62vh;
-  }
-
-  .dock {
-    grid-template-columns: 1fr;
-    height: auto;
-  }
-
-  .dock-col {
-    max-height: 320px;
-  }
-
-  .dock-col + .dock-col {
-    border-left: 0;
-    border-top: 1px solid var(--border);
   }
 
   .form-grid {
@@ -2220,11 +2059,6 @@ h3 {
   color: var(--text-2);
 }
 
-.more {
-  display: flex;
-  margin: var(--sp-2) auto 0;
-}
-
 .aside-search {
   padding: 0 var(--sp-3) var(--sp-2);
 }
@@ -2319,14 +2153,6 @@ h3 {
 .hud-chip .dot {
   width: 6px;
   height: 6px;
-}
-
-.event.unknown .event-name {
-  font-weight: 500;
-}
-
-.event-side {
-  align-items: center;
 }
 
 @media (max-width: 860px) {
@@ -2895,10 +2721,500 @@ h3 {
   }
 }
 
+/* ------------------------------------------------ sidebar, second pass */
+
+/* Brand and the station clock share the head of the rail. */
+.sidebar-head {
+  display: grid;
+  gap: var(--sp-3);
+  padding: var(--sp-1) var(--sp-2) var(--sp-4);
+  margin-bottom: var(--sp-2);
+  border-bottom: 1px solid var(--border);
+}
+
+.sidebar .sidebar-head .brand {
+  padding: 0;
+}
+
+/* The station clock: a wall-clock dial in the theme's own colours, figures at
+   the quarters, three hands; the second hand carries the brand amber. */
+.station-clock {
+  display: grid;
+  grid-template-columns: 88px minmax(0, 1fr);
+  align-items: center;
+  gap: var(--sp-3);
+}
+
+.clock-dial {
+  width: 88px;
+  height: 88px;
+  display: block;
+}
+
+.clock-face {
+  fill: var(--clock-face);
+  stroke: var(--clock-rim);
+  stroke-width: 8;
+}
+
+.clock-mark {
+  stroke: var(--clock-rim);
+  stroke-width: 6;
+  stroke-linecap: round;
+}
+
+.clock-mark.quarter {
+  stroke-width: 7;
+}
+
+.clock-figure {
+  fill: var(--clock-rim);
+  font-family: var(--font-sans);
+  font-size: 34px;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  text-anchor: middle;
+  dominant-baseline: central;
+}
+
+.clock-hand {
+  stroke-linecap: butt;
+}
+
+.clock-hand.hour {
+  stroke: var(--clock-rim);
+}
+
+.clock-hand.minute {
+  stroke: var(--clock-minute);
+}
+
+.clock-hand.second {
+  stroke: var(--clock-second);
+}
+
+.clock-cap {
+  fill: var(--clock-rim);
+}
+
+.clock-caption {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.clock-time {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--fs-xl);
+  line-height: var(--lh-xl);
+  font-weight: 500;
+  color: var(--text);
+}
+
+.clock-date {
+  font-size: var(--fs-xs);
+  line-height: var(--lh-xs);
+  color: var(--text-2);
+}
+
+/* Bottom: tools on one row, then who is signed in. */
+.sidebar-tools {
+  display: grid;
+  gap: var(--sp-2);
+  padding-top: var(--sp-2);
+  border-top: 1px solid var(--border);
+}
+
+.sidebar-row {
+  gap: var(--sp-1);
+}
+
+.sidebar-tools .menu {
+  position: relative;
+}
+
+.user-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--sp-2);
+  width: 100%;
+  padding: var(--sp-2);
+  border: 0;
+  border-radius: var(--r-sm);
+  background: none;
+  text-align: left;
+  cursor: pointer;
+}
+
+.user-card:hover,
+.user-card[aria-expanded="true"] {
+  background: var(--surface-2);
+}
+
+.user-avatar {
+  display: grid;
+  place-items: center;
+  width: var(--control);
+  height: var(--control);
+  border-radius: 50%;
+  background: var(--surface-3);
+  color: var(--text);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+}
+
+.user-text {
+  display: grid;
+  min-width: 0;
+}
+
+.user-name,
+.user-role {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.user-name {
+  font-size: var(--fs-sm);
+  font-weight: 500;
+}
+
+.user-role {
+  font-size: var(--fs-xs);
+  color: var(--text-3);
+}
+
+.user-caret {
+  color: var(--text-3);
+}
+
+/* The menu opens upward from the card, across the rail. */
+.sidebar-tools .menu .menu-pop {
+  left: 0;
+  right: 0;
+  bottom: calc(100% + var(--sp-1));
+  min-width: 0;
+}
+
+/* Collapsed rail: the clock shows hours and minutes, figures turn into a dot. */
+.nav-collapsed .sidebar-head {
+  padding-inline: 0;
+  justify-items: center;
+}
+
+/* Collapsed: the dial alone, small; the hour marks stand in for figures. */
+.nav-collapsed .station-clock {
+  grid-template-columns: 40px;
+}
+
+.nav-collapsed .clock-dial {
+  width: 40px;
+  height: 40px;
+}
+
+.nav-collapsed .clock-figure {
+  display: none;
+}
+
+.nav-collapsed .clock-caption,
+.nav-collapsed .nav-label,
+.nav-collapsed .user-text,
+.nav-collapsed .user-caret,
+.nav-collapsed .sidebar-row .spacer {
+  display: none;
+}
+
+.nav-collapsed .user-card {
+  grid-template-columns: auto;
+  justify-content: center;
+  padding: var(--sp-1) 0;
+}
+
+.nav-collapsed .sidebar-tools .menu .menu-pop {
+  left: calc(100% + var(--sp-2));
+  right: auto;
+  bottom: 0;
+  min-width: 220px;
+}
+
 @media (max-width: 860px) {
-  /* On a phone the two event columns stack, whichever is empty. */
-  .dock.left-empty,
-  .dock.right-empty {
+  /* Phone top bar: icons only; the clock and names stay on the larger screens. */
+  .sidebar-head,
+  .nav-label,
+  .user-text,
+  .user-caret,
+  .sidebar-row .spacer {
+    display: none;
+  }
+
+  .sidebar-tools {
+    display: flex;
+    align-items: center;
+    border-top: 0;
+    padding-top: 0;
+  }
+
+  .user-card {
+    grid-template-columns: auto;
+    padding: 0;
+  }
+
+  .user-avatar {
+    width: var(--control-sm);
+    height: var(--control-sm);
+  }
+
+  .sidebar-tools .menu .menu-pop {
+    left: auto;
+    right: 0;
+    bottom: auto;
+    top: calc(100% + var(--sp-1));
+    min-width: 220px;
+  }
+}
+
+/* ------------------------------------------- events: two filmstrips */
+
+/* Recognized and unrecognized, side by side; each a strip of frames read
+   from the newest on the left. A lane with nothing today is one line. */
+.dock {
+  position: relative;
+  flex: none;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  border-top: 1px solid var(--border);
+  background: var(--surface-1);
+}
+
+.dock .lane + .lane {
+  border-left: 1px solid var(--border);
+}
+
+/* The lane with events takes the room; an empty one narrows. */
+.dock:has(.lane.lane-quiet + .lane:not(.lane-quiet)) {
+  grid-template-columns: minmax(220px, 0.3fr) minmax(0, 1fr);
+}
+
+.dock:has(.lane:not(.lane-quiet) + .lane.lane-quiet) {
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 0.3fr);
+}
+
+.dock.collapsed {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-5);
+  padding-right: var(--sp-3);
+}
+
+.lane {
+  min-width: 0;
+  padding: var(--sp-3) 0 var(--sp-3) var(--sp-4);
+}
+
+.lane-head {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding-right: var(--sp-6);
+}
+
+.lane-head h2 {
+  font-size: var(--fs-md);
+  font-weight: 600;
+}
+
+.lane-head .count {
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  color: var(--text-3);
+}
+
+.dock.collapsed .lane-head {
+  padding: var(--sp-3) 0 var(--sp-3) var(--sp-4);
+}
+
+.lane-empty {
+  margin: var(--sp-1) 0 0;
+  padding-right: var(--sp-4);
+  font-size: var(--fs-sm);
+  color: var(--text-2);
+}
+
+/* Quiet day: both lanes are a single line each. */
+.dock.quiet .lane {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sp-3);
+}
+
+.dock.quiet .lane-empty {
+  margin: 0;
+}
+
+.dock.quiet .lane-head {
+  padding-right: 0;
+  flex: none;
+}
+
+.strip {
+  display: flex;
+  gap: var(--sp-2);
+  margin-top: var(--sp-2);
+  padding: 0 var(--sp-4) var(--sp-1) 0;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+/* One event: its frame, then time and who or where. */
+.frame {
+  position: relative;
+  flex: none;
+  width: 168px;
+  margin: 0;
+  display: grid;
+  gap: 6px;
+  padding: var(--sp-1);
+  border-radius: var(--r-md);
+}
+
+.frame:hover {
+  background: var(--surface-2);
+}
+
+.frame.fresh {
+  animation: fresh 2s var(--ease-out);
+}
+
+@keyframes fresh {
+  from {
+    background: var(--surface-3);
+  }
+}
+
+.frame-shot {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-sm);
+  overflow: hidden;
+  background: var(--video-idle);
+  cursor: zoom-in;
+}
+
+.frame-shot img,
+.frame-shot .no-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: flex;
+}
+
+/* A known person: the face, square, beside the words. */
+.frame.person {
+  width: 220px;
+  grid-template-columns: 56px minmax(0, 1fr);
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.frame.person .frame-shot {
+  aspect-ratio: 1;
+}
+
+.frame figcaption {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+
+.frame-time {
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  color: var(--text);
+}
+
+.frame-title {
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.frame-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1);
+  min-width: 0;
+  font-size: var(--fs-xs);
+  color: var(--text-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.frame-meta .dir {
+  flex: none;
+}
+
+.frame-add {
+  position: absolute;
+  top: var(--sp-2);
+  right: var(--sp-2);
+  background: var(--scrim);
+  color: var(--on-video);
+}
+
+.frame-add:hover {
+  background: var(--scrim);
+  color: var(--accent);
+}
+
+.strip-more {
+  flex: none;
+  align-self: center;
+}
+
+.dock-hide {
+  position: absolute;
+  top: var(--sp-2);
+  right: var(--sp-2);
+}
+
+/* ----------------------------------------- camera list, selected row */
+
+.cam-item.on {
+  background: var(--surface-2);
+}
+
+.cam-item.on .cam-item-name {
+  font-weight: 500;
+}
+
+@media (max-width: 860px) {
+  .dock,
+  .dock:has(.lane.lane-quiet + .lane:not(.lane-quiet)),
+  .dock:has(.lane:not(.lane-quiet) + .lane.lane-quiet) {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .dock .lane + .lane {
+    border-left: 0;
+    border-top: 1px solid var(--border);
+  }
+
+  .dock.quiet .lane {
+    display: block;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .frame.fresh {
+    animation: none;
   }
 }

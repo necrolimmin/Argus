@@ -101,3 +101,21 @@ export function bento(n: number): Bento {
 
 /** How many cameras a bento layout holds. */
 export const bentoCells = (b: Bento) => b.cols * b.rows - b.feature.cols * b.feature.rows + 1;
+
+/**
+ * Columns and rows for `n` 16:9 pictures in a `w`×`h` space: the even grid,
+ * unless another arrangement makes the pictures clearly larger.
+ */
+export function bestFit(n: number, w: number, h: number, gap: number): { cols: number; rows: number } {
+  // Start from the even grid (2 side by side, 2×2) and take a taller or wider
+  // one only when its pictures come out clearly larger, by 15% or more.
+  const size = (cols: number) => {
+    const rows = Math.ceil(n / cols);
+    const cw = (w - (cols - 1) * gap) / cols;
+    const ch = (h - (rows - 1) * gap) / rows;
+    return Math.min(cw, (ch * 16) / 9);
+  };
+  let cols = Math.ceil(Math.sqrt(n));
+  for (let c = 1; c <= n; c++) if (size(c) > size(cols) * 1.15) cols = c;
+  return { cols, rows: Math.ceil(n / cols) };
+}

@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { ChevronLeft, ChevronRight, ScanFace, Search, SquareDashed } from "lucide-react";
-import { type CSSProperties, type DragEvent, useEffect, useMemo, useState } from "react";
+import { type CSSProperties, type DragEvent, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { api } from "../api/client";
@@ -12,7 +12,7 @@ import { EventsDock } from "../components/EventsDock";
 import { UnitPicker } from "../components/UnitPicker";
 import { isAdmin, type Layout, useAuth, useWall } from "../lib/store";
 import { unitPath } from "../lib/tree";
-import { AUTO_MAX, bento, bentoCells, compact, place, swap } from "../lib/wall";
+import { AUTO_MAX, bento, bentoCells, bestFit, compact, place, swap } from "../lib/wall";
 
 const LAYOUTS: Exclude<Layout, "auto">[] = [1, 4, 9, 16];
 // What is being dragged onto a cell: another cell, or a camera from the list.
@@ -39,6 +39,16 @@ export function CamerasPage() {
   const [query, setQuery] = useState("");
   const [fullscreen, setFullscreen] = useState<Camera | null>(null);
   const [dropTarget, setDropTarget] = useState<number | null>(null);
+  // The wall's free space, for fitting the automatic grid to it.
+  const wallRef = useRef<HTMLDivElement>(null);
+  const [wallSize, setWallSize] = useState<{ w: number; h: number } | null>(null);
+  useEffect(() => {
+    const el = wallRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(([e]) => setWallSize({ w: e.contentRect.width, h: e.contentRect.height }));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
   const admin = isAdmin(useAuth((s) => s.user));
   // Device names and addresses tell cameras with the same name apart. The
   // device list is an administrator's; operators see unit and channel.
@@ -81,9 +91,14 @@ export function CamerasPage() {
   // others sit around it. Drag a camera onto the big cell to feature it.
   const layoutAuto = bento(Math.min(Math.max(slots.length, 1), AUTO_MAX));
   const perPage = wall.layout === "auto" ? bentoCells(layoutAuto) : wall.layout;
-  const grid = auto
-    ? layoutAuto
-    : { cols: Math.sqrt(perPage), rows: Math.sqrt(perPage), feature: { cols: 1, rows: 1 } };
+  // Up to four cameras the automatic grid is chosen for the space the wall
+  // really has, so two cameras stack on a wide screen instead of leaving bands.
+  const fit = auto && slots.length <= 4 && wallSize ? bestFit(Math.max(slots.length, 1), wallSize.w, wallSize.h, 4) : null;
+  const grid = fit
+    ? { ...fit, feature: { cols: 1, rows: 1 } }
+    : auto
+      ? layoutAuto
+      : { cols: Math.sqrt(perPage), rows: Math.sqrt(perPage), feature: { cols: 1, rows: 1 } };
   const featured = grid.feature.cols * grid.feature.rows > 1;
   const cellCount = perPage;
   const pages = Math.max(1, Math.ceil(slots.length / perPage));
@@ -181,7 +196,7 @@ export function CamerasPage() {
                   return (
                     <label
                       key={c.id}
-                      className="cam-item"
+                      className={`cam-item${wall.cameraIds.includes(c.id) ? " on" : ""}`}
                       draggable
                       onDragStart={(e) => {
                         e.dataTransfer.setData(CAMERA, c.id);
@@ -268,7 +283,7 @@ export function CamerasPage() {
           </div>
         </div>
 
-        <div className="wall-body">
+        <div className="wall-body" ref={wallRef}>
           {selected.length === 0 ? (
             <div className={`empty center${dropTarget === 0 ? " drop-target" : ""}`} {...dropOn(0)}>
               <SquareDashed size={40} strokeWidth={1.4} />
