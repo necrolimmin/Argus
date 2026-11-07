@@ -3,7 +3,7 @@ import { Navigate, Route, Routes } from "react-router-dom";
 
 import { api, getToken, handleUnauthorized } from "./api/client";
 import { Layout } from "./components/Layout";
-import { useAuth, useWall } from "./lib/store";
+import { isViewer, useAuth, useWall } from "./lib/store";
 import { ApiPage } from "./pages/ApiPage";
 import { CamerasPage } from "./pages/CamerasPage";
 import { DevicesPage } from "./pages/DevicesPage";
@@ -38,6 +38,17 @@ export function App() {
 
   if (checking) return null;
   if (!user) return <LoginPage />;
+
+  if (isViewer(user)) {
+    return (
+      <Routes>
+        <Route element={<Layout />}>
+          <Route path="/cameras" element={<CamerasPage />} />
+          <Route path="*" element={<Navigate to="/cameras" replace />} />
+        </Route>
+      </Routes>
+    );
+  }
 
   return (
     <Routes>

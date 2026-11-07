@@ -22,7 +22,7 @@ import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 
 import { setToken } from "../api/client";
 import { intlLocale, LANGUAGES, setLanguage } from "../i18n";
-import { isAdmin, useAuth, useUi } from "../lib/store";
+import { isAdmin, isViewer, useAuth, useUi } from "../lib/store";
 import { PasswordModal } from "../pages/PasswordModal";
 
 /**
@@ -267,7 +267,9 @@ export function Layout() {
   const { t, i18n } = useTranslation();
   const toast = useUi((s) => s.toast);
   const { navCollapsed, toggleNav } = useUi();
-  const admin = isAdmin(useAuth((s) => s.user));
+  const user = useAuth((s) => s.user);
+  const admin = isAdmin(user);
+  const viewer = isViewer(user);
   const toggleLabel = navCollapsed ? t("nav.expand") : t("nav.collapse");
   const { pathname } = useLocation();
   const { navRef, pill } = useNavPill([pathname, navCollapsed, admin, i18n.language]);
@@ -287,7 +289,8 @@ export function Layout() {
             />
           )}
           {GROUPS.map((group) => {
-            const tabs = group.tabs.filter((tab) => admin || !tab.adminOnly);
+            // A viewer has the camera wall and nothing else.
+            const tabs = group.tabs.filter((tab) => (admin || !tab.adminOnly) && (!viewer || tab.to === "/cameras"));
             if (!tabs.length) return null;
             return (
               <div key={group.label} className="nav-group" role="group" aria-label={t(group.label)}>

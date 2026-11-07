@@ -1,4 +1,4 @@
-export type Role = "admin" | "operator";
+export type Role = "admin" | "operator" | "viewer";
 export type OrgLevel = "company" | "branch" | "enterprise" | "section";
 export type Vendor =
   | "hikvision"
@@ -27,6 +27,8 @@ export interface User {
   role: Role;
   org_unit_id: string | null;
   is_active: boolean;
+  /** For viewers: the cameras they may watch. */
+  camera_ids: string[];
 }
 
 export interface OrgUnit {

@@ -48,13 +48,22 @@ def scope_path(user: User) -> str | None:
     """Path prefix the user may see, or None for everything (admins)."""
     if user.role == UserRole.admin:
         return None
-    # An operator without a unit sees nothing; "//" matches no real path.
+    # An operator without a unit, or a viewer, sees no unit; "//" matches no real path.
+    if user.role == UserRole.viewer:
+        return "//"
     return user.org_unit.path if user.org_unit else "//"
 
 
 def in_scope(user: User, path: str) -> bool:
     prefix = scope_path(user)
     return prefix is None or path.startswith(prefix)
+
+
+def can_watch(user: User, camera) -> bool:
+    """Viewers watch the cameras given to them; others, the cameras of their units."""
+    if user.role == UserRole.viewer:
+        return camera.id in user.camera_ids
+    return in_scope(user, camera.org_unit.path)
 
 
 async def require_service(x_service_token: Annotated[str | None, Header()] = None) -> None:

@@ -7,6 +7,7 @@ import { Navigate } from "react-router-dom";
 import { api } from "../api/client";
 import { keys, useUnits } from "../api/queries";
 import type { Role, User } from "../api/types";
+import { CameraAccess } from "../components/CameraAccess";
 import { Confirm, Modal } from "../components/Modal";
 import { RowActions } from "../components/RowActions";
 import { EmptyState, ErrorState, Skeleton } from "../components/States";
@@ -78,7 +79,7 @@ export function UsersPage() {
             />
           </div>
           <div className="segmented" role="group" aria-label={t("users.role")}>
-            {(["all", "admin", "operator"] as const).map((r) => (
+            {(["all", "admin", "operator", "viewer"] as const).map((r) => (
               <button key={r} aria-pressed={role === r} onClick={() => setRole(r)}>
                 {r === "all" ? t("common.all") : t(`users.roles.${r}`)}
               </button>
@@ -143,7 +144,7 @@ export function UsersPage() {
                     <td title={u.full_name}>{u.full_name}</td>
                     <td>{t(`users.roles.${u.role}`)}</td>
                     <td className="muted" title={u.org_unit_id ? unitPath(units, u.org_unit_id) : undefined}>
-                      {unitName(u.org_unit_id)}
+                      {u.role === "viewer" ? t("users.camerasCount", { count: u.camera_ids.length }) : unitName(u.org_unit_id)}
                     </td>
                     <td>
                       <span className={`status${u.is_active ? "" : " off"}`}>
@@ -200,6 +201,7 @@ function UserModal({ user, onClose }: { user?: User; onClose: () => void }) {
   const [role, setRole] = useState<Role>(user?.role ?? "operator");
   const [unitId, setUnitId] = useState(user?.org_unit_id ?? "");
   const [active, setActive] = useState(user?.is_active ?? true);
+  const [cameraIds, setCameraIds] = useState<string[]>(user?.camera_ids ?? []);
   const [error, setError] = useState("");
   const hint = useMemo(() => t(`users.roleHint.${role}`), [t, role]);
 
@@ -212,10 +214,18 @@ function UserModal({ user, onClose }: { user?: User; onClose: () => void }) {
           role,
           org_unit_id,
           is_active: active,
+          camera_ids: role === "viewer" ? cameraIds : [],
           ...(password ? { password } : {}),
         });
       }
-      return api.createUser({ username: username.trim(), full_name: fullName, password, role, org_unit_id });
+      return api.createUser({
+        username: username.trim(),
+        full_name: fullName,
+        password,
+        role,
+        org_unit_id,
+        camera_ids: role === "viewer" ? cameraIds : [],
+      });
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: keys.users });
@@ -234,6 +244,7 @@ function UserModal({ user, onClose }: { user?: User; onClose: () => void }) {
     <Modal
       title={user ? user.username : t("users.add")}
       onClose={onClose}
+      wide={role === "viewer"}
       footer={
         <>
           <button className="btn btn-ghost" onClick={onClose}>
@@ -279,7 +290,7 @@ function UserModal({ user, onClose }: { user?: User; onClose: () => void }) {
         <div className="field wide">
           <span>{t("users.role")}</span>
           <div className="segmented" role="group">
-            {(["operator", "admin"] as Role[]).map((r) => (
+            {(["viewer", "operator", "admin"] as Role[]).map((r) => (
               <button type="button" key={r} aria-pressed={role === r} onClick={() => setRole(r)}>
                 {t(`users.roles.${r}`)}
               </button>
@@ -292,6 +303,12 @@ function UserModal({ user, onClose }: { user?: User; onClose: () => void }) {
             <span>{t("users.unit")}</span>
             <UnitSelect units={units} value={unitId} onChange={setUnitId} required />
           </label>
+        )}
+        {role === "viewer" && (
+          <div className="field wide">
+            <span>{t("users.cameras")}</span>
+            <CameraAccess value={cameraIds} onChange={setCameraIds} />
+          </div>
         )}
         {user && (
           <label className="check wide">

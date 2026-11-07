@@ -61,6 +61,8 @@ class OrgUnit(Base):
 class UserRole(str, enum.Enum):
     admin = "admin"
     operator = "operator"
+    # Watches only the cameras given to them, nothing else.
+    viewer = "viewer"
 
 
 class User(Base):
@@ -79,6 +81,24 @@ class User(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
     org_unit: Mapped[OrgUnit | None] = relationship(lazy="joined")
+    camera_links: Mapped[list["UserCamera"]] = relationship(
+        cascade="all, delete-orphan", lazy="selectin"
+    )
+
+    @property
+    def camera_ids(self) -> list[uuid.UUID]:
+        return [link.camera_id for link in self.camera_links]
+
+
+class UserCamera(Base):
+    """A camera a viewer may watch."""
+
+    __tablename__ = "user_cameras"
+
+    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), primary_key=True)
+    camera_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("cameras.id", ondelete="CASCADE"), primary_key=True, index=True
+    )
 
 
 class CameraVendor(str, enum.Enum):

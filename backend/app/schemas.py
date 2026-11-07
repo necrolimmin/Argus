@@ -26,6 +26,7 @@ class UserOut(ORM):
     role: UserRole
     org_unit_id: uuid.UUID | None
     is_active: bool
+    camera_ids: list[uuid.UUID] = []
 
 
 class TokenOut(BaseModel):
@@ -44,6 +45,8 @@ class UserCreate(BaseModel):
     password: str = Field(min_length=6, max_length=128)
     role: UserRole
     org_unit_id: uuid.UUID | None = None
+    # For viewers: the cameras they may watch.
+    camera_ids: list[uuid.UUID] = Field(default=[], max_length=1000)
 
     @model_validator(mode="after")
     def _operator_needs_unit(self):
@@ -58,6 +61,7 @@ class UserUpdate(BaseModel):
     role: UserRole | None = None
     org_unit_id: uuid.UUID | None = None
     is_active: bool | None = None
+    camera_ids: list[uuid.UUID] | None = Field(default=None, max_length=1000)
 
 
 # --- org structure --------------------------------------------------------

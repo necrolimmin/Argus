@@ -120,9 +120,26 @@ export const api = {
     request<void>("/api/auth/password", json("POST", { current_password, new_password })),
 
   users: () => request<User[]>("/api/users"),
-  createUser: (body: { username: string; full_name: string; password: string; role: Role; org_unit_id: string | null }) =>
+  createUser: (body: {
+    username: string;
+    full_name: string;
+    password: string;
+    role: Role;
+    org_unit_id: string | null;
+    camera_ids: string[];
+  }) =>
     request<User>("/api/users", json("POST", body)),
-  updateUser: (id: string, body: Partial<{ full_name: string; password: string; role: Role; org_unit_id: string | null; is_active: boolean }>) =>
+  updateUser: (
+    id: string,
+    body: Partial<{
+      full_name: string;
+      password: string;
+      role: Role;
+      org_unit_id: string | null;
+      is_active: boolean;
+      camera_ids: string[];
+    }>,
+  ) =>
     request<User>(`/api/users/${id}`, json("PATCH", body)),
   deleteUser: (id: string) => request<void>(`/api/users/${id}`, { method: "DELETE" }),
 

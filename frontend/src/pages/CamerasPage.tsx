@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { ChevronLeft, ChevronRight, ScanFace, Search } from "lucide-react";
+import { ChevronLeft, ChevronRight, Footprints, ScanFace, Search } from "lucide-react";
 import { type CSSProperties, type DragEvent, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -10,8 +10,9 @@ import { CameraTile, FullscreenCamera } from "../components/CameraTile";
 import { DirectionBadge } from "../components/DirectionBadge";
 import { EventsDock } from "../components/EventsDock";
 import { Logo } from "../components/Layout";
+import { Patrol } from "../components/Patrol";
 import { UnitPicker } from "../components/UnitPicker";
-import { isAdmin, type Layout, useAuth, useWall } from "../lib/store";
+import { isAdmin, isViewer, type Layout, useAuth, useWall } from "../lib/store";
 import { unitPath } from "../lib/tree";
 import { AUTO_MAX, bento, bentoCells, bestFit, compact, place, swap } from "../lib/wall";
 
@@ -50,7 +51,11 @@ export function CamerasPage() {
     ro.observe(el);
     return () => ro.disconnect();
   }, []);
-  const admin = isAdmin(useAuth((s) => s.user));
+  const user = useAuth((s) => s.user);
+  const admin = isAdmin(user);
+  // A viewer has no units: their list is the cameras given to them.
+  const viewer = isViewer(user);
+  const [patrolFrom, setPatrolFrom] = useState<number | null>(null);
   // Device names and addresses tell cameras with the same name apart. The
   // device list is an administrator's; operators see unit and channel.
   const devices = useQuery({ queryKey: keys.devices, queryFn: api.devices, enabled: admin });
@@ -73,11 +78,20 @@ export function CamerasPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [units]);
 
+  // A viewer's wall starts full: on the first visit all their cameras are put up.
+  const filled = useRef(false);
+  useEffect(() => {
+    if (!viewer || filled.current || !all.data) return;
+    filled.current = true;
+    if (!compact(wall.cameraIds).length && all.data.length) wall.addCameras(all.data.slice(0, AUTO_MAX).map((c) => c.id));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [viewer, all.data]);
+
   const listed = useMemo(() => {
     const q = query.trim().toLowerCase();
-    const cams = unitList.data ?? [];
+    const cams = (viewer ? all.data : unitList.data) ?? [];
     return q ? cams.filter((c) => c.name.toLowerCase().includes(q)) : cams;
-  }, [unitList.data, query]);
+  }, [viewer, all.data, unitList.data, query]);
 
   const selected = compact(wall.cameraIds)
     .map((id) => byId.get(id))
@@ -151,6 +165,7 @@ export function CamerasPage() {
   return (
     <div className="wall-page">
       <aside className="aside">
+        {!viewer && (
         <UnitPicker
           units={units}
           loading={unitsLoading}
@@ -160,10 +175,11 @@ export function CamerasPage() {
           placeholder={t("cameras.chooseUnit")}
           defaultOpen={wall.unitId === null}
         />
+        )}
 
         <section className="aside-section">
           <div className="aside-head">
-            <h2>{t("cameras.list")}</h2>
+            <h2>{viewer ? t("cameras.mine") : t("cameras.list")}</h2>
             <span className="spacer" />
             {listed.length > 0 && (
               <button className="btn btn-ghost btn-sm" onClick={toggleAll}>
@@ -171,11 +187,13 @@ export function CamerasPage() {
               </button>
             )}
           </div>
-          {wall.unitId === null ? (
+          {viewer && all.isSuccess && all.data.length === 0 ? (
+            <p className="aside-note">{t("cameras.mineEmpty")}</p>
+          ) : !viewer && wall.unitId === null ? (
             <p className="aside-note">{t("cameras.pickUnit")}</p>
           ) : (
             <>
-              {(unitList.data?.length ?? 0) > 8 && (
+              {((viewer ? all.data : unitList.data)?.length ?? 0) > 8 && (
                 <div className="search aside-search">
                   <Search size={15} />
                   <input
@@ -187,7 +205,7 @@ export function CamerasPage() {
                 </div>
               )}
               <div className="aside-scroll">
-                {unitList.isSuccess && unitList.data.length === 0 && (
+                {!viewer && unitList.isSuccess && unitList.data.length === 0 && (
                   <p className="aside-note tight">
                     {t("cameras.noCameras")} {t("cameras.addCamerasHint")}
                   </p>
@@ -215,7 +233,7 @@ export function CamerasPage() {
                           <span className="cam-item-unit num">
                             {dev.name} · {dev.host}
                           </span>
-                        ) : (
+                        ) : viewer ? null : (
                           <span className="cam-item-unit">
                             {unitNames.get(c.org_unit_id)} · {t("cameras.channelNo", { n: c.channel })}
                           </span>
@@ -246,6 +264,12 @@ export function CamerasPage() {
             </span>
           </div>
           <span className="spacer" />
+          {selected.length > 1 && (
+            <button className="btn btn-sm patrol-btn" onClick={() => setPatrolFrom(0)} title={t("cameras.patrolHint")}>
+              <Footprints size={15} aria-hidden />
+              {t("cameras.patrol")}
+            </button>
+          )}
           {pages > 1 && (
             <div className="pager">
               <button
@@ -290,8 +314,14 @@ export function CamerasPage() {
               <span className="wall-empty-frame" aria-hidden>
                 <Logo size={56} />
               </span>
-              <strong>{t("cameras.lead")}</strong>
-              <span>{t("cameras.nothingSelected")}</span>
+              {viewer && all.isSuccess && all.data.length === 0 ? (
+                <strong>{t("cameras.mineEmpty")}</strong>
+              ) : (
+                <>
+                  <strong>{t("cameras.lead")}</strong>
+                  <span>{t("cameras.nothingSelected")}</span>
+                </>
+              )}
             </div>
           ) : (
             <div
@@ -334,10 +364,11 @@ export function CamerasPage() {
           )}
         </div>
 
-        {faceIds.length > 0 && <EventsDock cameraIds={faceIds} defaultUnitId={wall.unitId} />}
+        {!viewer && faceIds.length > 0 && <EventsDock cameraIds={faceIds} defaultUnitId={wall.unitId} />}
       </section>
 
       {fullscreen && <FullscreenCamera camera={fullscreen} onClose={() => setFullscreen(null)} />}
+      {patrolFrom !== null && <Patrol cameras={selected} startAt={patrolFrom} onClose={() => setPatrolFrom(null)} />}
     </div>
   );
 }

@@ -18,6 +18,8 @@ export const useAuth = create<AuthState>((set) => ({
 }));
 
 export const isAdmin = (user: User | null) => user?.role === "admin";
+/** Watches only the cameras given to them: one tab, no units, no events. */
+export const isViewer = (user: User | null) => user?.role === "viewer";
 
 interface UiState {
   theme: Theme;

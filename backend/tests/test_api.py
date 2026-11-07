@@ -207,3 +207,45 @@ def test_events_flow_and_websocket(client, admin, tree):
     assert len(r.json()["photos"]) == 1
     again = client.get("/api/events", params={"kind": "unknown"}, headers=admin).json()
     assert again[0]["linked_employee_name"] == "New Person"
+
+
+def test_viewer_watches_only_given_cameras(client, admin, tree):
+    a = add_camera(client, admin, tree["branch_a"]["id"], name="A")
+    b = add_camera(client, admin, tree["branch_b"]["id"], name="B", host="10.0.0.6")
+    c = add_camera(client, admin, tree["section"]["id"], name="C", host="10.0.0.7")
+    r = client.post(
+        "/api/users",
+        json={"username": "guard", "password": "secret1", "role": "viewer", "camera_ids": [a["id"], c["id"]],
+              "org_unit_id": tree["branch_a"]["id"]},
+        headers=admin,
+    )
+    assert r.status_code == 201, r.text
+    user = r.json()
+    assert sorted(user["camera_ids"]) == sorted([a["id"], c["id"]]) and user["org_unit_id"] is None
+    viewer = login(client, "guard", "secret1")
+
+    cams = client.get("/api/cameras", headers=viewer).json()
+    assert [x["name"] for x in cams] == ["A", "C"]
+    assert all(x["rtsp_main"] == "" for x in cams)
+    assert client.get(f"/api/cameras/{b['id']}", headers=viewer).status_code == 404
+    assert client.get(f"/api/cameras/{a['id']}", headers=viewer).status_code == 200
+    # Nothing else is theirs to see.
+    assert client.get("/api/org-units", headers=viewer).json() == []
+    assert client.get("/api/employees", headers=viewer).json()["total"] == 0
+    assert client.get("/api/events", params={"kind": "unknown"}, headers=viewer).json() == []
+    assert client.get("/api/devices", headers=viewer).status_code == 403
+    assert client.get("/api/users", headers=viewer).status_code == 403
+
+    # Changing the list keeps the cameras that stay; a deleted camera drops out.
+    r = client.patch(f"/api/users/{user['id']}", json={"camera_ids": [c["id"], b["id"]]}, headers=admin)
+    assert r.status_code == 200 and sorted(r.json()["camera_ids"]) == sorted([b["id"], c["id"]])
+    assert client.delete(f"/api/cameras/{c['id']}", headers=admin).status_code == 204
+    assert [x["name"] for x in client.get("/api/cameras", headers=viewer).json()] == ["B"]
+    r = client.patch(f"/api/users/{user['id']}", json={"camera_ids": ["00000000-0000-0000-0000-000000000000"]},
+                     headers=admin)
+    assert r.status_code == 422
+
+    # Another role drops the list.
+    r = client.patch(f"/api/users/{user['id']}", json={"role": "operator", "org_unit_id": tree["branch_a"]["id"]},
+                     headers=admin)
+    assert r.status_code == 200 and r.json()["camera_ids"] == []

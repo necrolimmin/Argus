@@ -3861,3 +3861,237 @@ h3 {
     transition: none;
   }
 }
+
+/* --- patrol: the chosen cameras in turn, full screen --------------------- */
+
+.patrol .tile {
+  cursor: default;
+  animation: fade-in 260ms ease-out both;
+}
+
+/* The tile's own labels and pointer corners would repeat the bar. */
+.patrol .tile .hud,
+.patrol .tile .hud-corner,
+.patrol .tile .tile-corners {
+  display: none;
+}
+
+.patrol-bar {
+  position: absolute;
+  left: 50%;
+  bottom: var(--sp-5);
+  z-index: 8;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  width: min(760px, calc(100vw - 2 * var(--sp-4)));
+  padding: var(--sp-2) var(--sp-2) var(--sp-2) var(--sp-4);
+  border-radius: var(--r-lg);
+  background: var(--scrim);
+  color: var(--on-video);
+  overflow: hidden;
+}
+
+.patrol-now {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sp-3);
+  min-width: 0;
+  flex: 1;
+}
+
+.patrol-count {
+  font-family: var(--font-mono);
+  font-size: var(--fs-xl);
+  line-height: 1;
+  color: var(--accent);
+}
+
+.patrol-count span {
+  font-size: var(--fs-sm);
+  color: var(--on-video);
+  opacity: 0.6;
+}
+
+.patrol-name {
+  font-size: var(--fs-lg);
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.patrol-next {
+  font-size: var(--fs-sm);
+  opacity: 0.6;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.patrol-controls {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.patrol-controls .icon-btn {
+  color: var(--on-video);
+}
+
+.patrol-controls .icon-btn:hover {
+  background: var(--overlay);
+}
+
+.patrol-step {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 var(--sp-2);
+  font-size: var(--fs-xs);
+  opacity: 0.85;
+  white-space: nowrap;
+}
+
+.patrol-step select {
+  height: 28px;
+  padding: 0 4px;
+  border: 0;
+  border-radius: var(--r-xs);
+  background: var(--overlay);
+  color: var(--on-video);
+  font: inherit;
+  font-family: var(--font-mono);
+}
+
+/* Fills over the camera's turn, then starts again with the next one. */
+.patrol-track {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+}
+
+.patrol-track i {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+  transform-origin: left;
+  animation: patrol-turn linear both;
+}
+
+.patrol-track i.paused {
+  animation-play-state: paused;
+}
+
+@keyframes patrol-turn {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@media (max-width: 860px) {
+  .patrol-bar {
+    flex-wrap: wrap;
+    gap: var(--sp-2);
+    bottom: var(--sp-3);
+  }
+
+  .patrol-next,
+  .patrol-step span {
+    display: none;
+  }
+}
+
+/* --- cameras a viewer may watch ------------------------------------------ */
+
+.access {
+  display: grid;
+  gap: var(--sp-2);
+}
+
+.access-head {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+}
+
+.access-head .search {
+  flex: 1;
+}
+
+.access-count {
+  font-size: var(--fs-sm);
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.access-count.none {
+  color: var(--text-3);
+}
+
+.access-list {
+  max-height: 320px;
+  overflow: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+}
+
+.access-group + .access-group {
+  border-top: 1px solid var(--border);
+}
+
+.access-unit,
+.access-cam {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  min-height: 36px;
+  padding: 0 var(--sp-3);
+  cursor: pointer;
+}
+
+.access-unit {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--surface-2);
+  font-size: var(--fs-sm);
+  font-weight: 500;
+}
+
+.access-path {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.access-cam {
+  padding-left: calc(var(--sp-3) + 24px);
+  color: var(--text-2);
+}
+
+.access-cam:hover {
+  background: var(--surface-2);
+}
+
+.access-cam.on {
+  color: var(--text);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .patrol .tile {
+    animation: none;
+  }
+
+  .patrol-track i {
+    animation: none;
+  }
+}

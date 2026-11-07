@@ -9,8 +9,8 @@ from websockets.asyncio.client import connect as ws_connect
 from websockets.exceptions import WebSocketException
 
 from app.db import SessionLocal
-from app.deps import AdminUser, CurrentUser, Session, in_scope, scope_path, user_from_token
-from app.models import Camera, OrgUnit, StreamQuality
+from app.deps import AdminUser, CurrentUser, Session, can_watch, scope_path, user_from_token
+from app.models import Camera, OrgUnit, StreamQuality, User, UserRole
 from app.schemas import CameraOut, CameraUpdate
 from app.services.org import get_unit_in_scope
 from app.services.streams import Go2rtcError, go2rtc, safe_register, safe_unregister, stream_name
@@ -20,13 +20,17 @@ log = logging.getLogger(__name__)
 router = APIRouter(prefix="/cameras", tags=["cameras"])
 
 
-def _out(cam: Camera) -> CameraOut:
-    return CameraOut.model_validate(cam)
+def _out(cam: Camera, user: User) -> CameraOut:
+    out = CameraOut.model_validate(cam)
+    if user.role != UserRole.admin:
+        # A raw stream link may carry the device's login; only admins need it.
+        out.rtsp_main = out.rtsp_sub = ""
+    return out
 
 
 async def _camera_in_scope(session, user, camera_id: uuid.UUID) -> Camera:
     cam = await session.get(Camera, camera_id)
-    if cam is None or not in_scope(user, cam.org_unit.path):
+    if cam is None or not can_watch(user, cam):
         raise HTTPException(status.HTTP_404_NOT_FOUND, "camera_not_found")
     return cam
 
@@ -40,7 +44,11 @@ async def list_cameras(
 ):
     """Cameras attached to the unit or anywhere below it."""
     query = select(Camera).join(Camera.org_unit).order_by(Camera.name)
-    prefix = scope_path(user)
+    if user.role == UserRole.viewer:
+        # A viewer has no units: their list is exactly the cameras given to them.
+        query = query.where(Camera.id.in_(user.camera_ids))
+        org_unit_id = None
+    prefix = scope_path(user) if user.role != UserRole.viewer else None
     if prefix is not None:
         query = query.where(OrgUnit.path.startswith(prefix))
     if org_unit_id is not None:
@@ -48,12 +56,12 @@ async def list_cameras(
         query = query.where(OrgUnit.path.startswith(unit.path))
     if face_recognition is not None:
         query = query.where(Camera.face_recognition == face_recognition)
-    return [_out(c) for c in (await session.scalars(query)).unique().all()]
+    return [_out(c, user) for c in (await session.scalars(query)).unique().all()]
 
 
 @router.get("/{camera_id}", response_model=CameraOut)
 async def get_camera(camera_id: uuid.UUID, user: CurrentUser, session: Session):
-    return _out(await _camera_in_scope(session, user, camera_id))
+    return _out(await _camera_in_scope(session, user, camera_id), user)
 
 
 @router.put("/{camera_id}", response_model=CameraOut)
@@ -70,7 +78,7 @@ async def update_camera(camera_id: uuid.UUID, body: CameraUpdate, user: AdminUse
     cam = await session.get(Camera, cam.id, populate_existing=True)
     if streams_changed:
         await safe_register(cam)
-    return _out(cam)
+    return _out(cam, user)
 
 
 @router.delete("/{camera_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -127,7 +135,7 @@ async def mse(ws: WebSocket, camera_id: uuid.UUID, token: str = "", quality: Str
     async with SessionLocal() as session:
         user = await user_from_token(session, token)
         cam = await session.get(Camera, camera_id)
-        allowed = user is not None and cam is not None and cam.enabled and in_scope(user, cam.org_unit.path)
+        allowed = user is not None and cam is not None and cam.enabled and can_watch(user, cam)
     if not allowed:
         await ws.close(code=status.WS_1008_POLICY_VIOLATION)
         return
