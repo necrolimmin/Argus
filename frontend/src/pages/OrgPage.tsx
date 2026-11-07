@@ -1,5 +1,5 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Building2, ImageOff, Plus, Search, UserRound } from "lucide-react";
+import { Building2, FileSpreadsheet, ImageOff, Plus, Search, UserPlus, UserRound } from "lucide-react";
 import { type FormEvent, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -7,6 +7,7 @@ import { api } from "../api/client";
 import { keys, useUnits } from "../api/queries";
 import { LEVELS, type Employee, type OrgLevel } from "../api/types";
 import { EmployeeModal } from "../components/EmployeeModal";
+import { MenuButton } from "../components/MenuButton";
 import { Confirm, Modal } from "../components/Modal";
 import { Thumb } from "../components/NoImage";
 import { StatFilter } from "../components/StatFilter";
@@ -15,6 +16,7 @@ import { UnitPicker } from "../components/UnitPicker";
 import { errorText } from "../lib/errors";
 import { isAdmin, useAuth, useUi } from "../lib/store";
 import { type TreeNode, unitPath } from "../lib/tree";
+import { EmployeeImportModal } from "./org/EmployeeImportModal";
 
 const PAGE = 50;
 
@@ -53,6 +55,7 @@ export function OrgPage() {
   const [active, setActive] = useState<boolean | undefined>(undefined);
   const [limit, setLimit] = useState(PAGE);
   const [editing, setEditing] = useState<Employee | "new" | null>(null);
+  const [importing, setImporting] = useState(false);
 
   const unitNames = useMemo(() => new Map(units.map((u) => [u.id, u.name])), [units]);
 
@@ -93,10 +96,23 @@ export function OrgPage() {
         </div>
         <span className="spacer" />
         {admin && units.length > 0 && (
-          <button className="btn btn-primary" onClick={() => setEditing("new")}>
-            <Plus size={16} />
-            {t("org.addEmployee")}
-          </button>
+          <MenuButton
+            label={
+              <>
+                <Plus size={16} />
+                {t("org.addEmployee")}
+              </>
+            }
+            items={[
+              { icon: UserPlus, label: t("org.addOne"), hint: t("org.addOneHint"), onClick: () => setEditing("new") },
+              {
+                icon: FileSpreadsheet,
+                label: t("org.addExcel"),
+                hint: t("org.addExcelHint"),
+                onClick: () => setImporting(true),
+              },
+            ]}
+          />
         )}
       </div>
 
@@ -294,6 +310,7 @@ export function OrgPage() {
           onDeleted={(id) => id === unitId && setUnitId(null)}
         />
       )}
+      {importing && <EmployeeImportModal onClose={() => setImporting(false)} />}
       {editing && (
         <EmployeeModal
           employee={editing === "new" ? undefined : editing}

@@ -14,6 +14,8 @@ import type {
   ProbeResult,
   Employee,
   EmployeeInput,
+  EmployeeImportProgress,
+  EmployeeImportRow,
   EventKind,
   FaceEvent,
   OrgUnit,
@@ -187,6 +189,25 @@ export const api = {
     form.append("file", file);
     return request<Employee>(`/api/employees/${id}/photos`, { method: "POST", body: form });
   },
+  employeeImportTemplate: async () => {
+    const res = await fetch("/api/employees/import/template", { headers: { Authorization: `Bearer ${token}` } });
+    if (!res.ok) throw new ApiError(res.status, `http_${res.status}`);
+    return res.blob();
+  },
+  employeeImportPreview: (file: File) => {
+    const form = new FormData();
+    form.append("file", file);
+    return request<{ token: string; rows: EmployeeImportRow[] }>("/api/employees/import/preview", {
+      method: "POST",
+      body: form,
+    });
+  },
+  employeeImportStart: (importToken: string) =>
+    request<EmployeeImportProgress>("/api/employees/import", json("POST", { token: importToken })),
+  employeeImportProgress: (importToken: string) =>
+    request<EmployeeImportProgress>(`/api/employees/import/${importToken}`),
+  employeeImportCancel: (importToken: string) =>
+    request<void>(`/api/employees/import/${importToken}`, { method: "DELETE" }),
   deletePhoto: (id: string, photoId: string) =>
     request<Employee>(`/api/employees/${id}/photos/${photoId}`, { method: "DELETE" }),
 

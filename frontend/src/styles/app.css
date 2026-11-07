@@ -3690,3 +3690,174 @@ h3 {
     transition: none;
   }
 }
+
+/* --- employees from Excel ---------------------------------------------- */
+
+/* The three steps are an actual order of work, so they are numbered. */
+.import-steps {
+  display: grid;
+  gap: var(--sp-3);
+  margin: 0 0 var(--sp-4);
+  padding: 0;
+  list-style: none;
+  counter-reset: step;
+}
+
+.import-steps li {
+  display: grid;
+  grid-template-columns: 28px 1fr;
+  column-gap: var(--sp-3);
+  row-gap: 2px;
+  align-items: start;
+  justify-items: start;
+  counter-increment: step;
+}
+
+.import-steps li::before {
+  content: counter(step);
+  grid-row: span 3;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--surface-3);
+  font-family: var(--font-mono);
+  font-size: var(--fs-sm);
+  color: var(--text);
+}
+
+.import-steps span {
+  font-size: var(--fs-sm);
+  color: var(--text-2);
+  max-width: 60ch;
+}
+
+.import-steps .btn {
+  margin-top: var(--sp-1);
+}
+
+.drop-zone {
+  display: grid;
+  justify-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-5) var(--sp-4);
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--r-md);
+  text-align: center;
+  color: var(--text-2);
+  font-size: var(--fs-sm);
+  transition:
+    border-color 120ms,
+    background 120ms;
+}
+
+.drop-zone.over {
+  border-color: var(--accent);
+  background: var(--surface-2);
+}
+
+.drop-zone.compact {
+  grid-auto-flow: column;
+  justify-content: start;
+  align-items: center;
+  padding: var(--sp-2) var(--sp-3);
+  text-align: left;
+}
+
+.drop-zone.compact .btn {
+  margin-left: auto;
+}
+
+.import-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  margin: var(--sp-4) 0 var(--sp-2);
+}
+
+.import-summary .badge {
+  margin: 0;
+  height: 24px;
+  padding: 0 var(--sp-2);
+  font-size: var(--fs-sm);
+}
+
+.badge.danger {
+  background: none;
+  color: var(--danger);
+  box-shadow: inset 0 0 0 1px currentColor;
+}
+
+.import-table td {
+  vertical-align: top;
+}
+
+.import-table .badge {
+  margin: 0;
+}
+
+.import-faces {
+  display: flex;
+  gap: 4px;
+}
+
+.import-faces img,
+.import-noface {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--r-xs);
+  object-fit: cover;
+  background: var(--surface-3);
+}
+
+.import-noface {
+  display: grid;
+  place-items: center;
+  color: var(--text-3);
+}
+
+.import-progress,
+.import-done {
+  display: grid;
+  gap: var(--sp-2);
+  padding: var(--sp-5) 0;
+}
+
+.meter {
+  display: block;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--surface-3);
+  overflow: hidden;
+}
+
+.meter i {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+  transition: width 400ms var(--ease-out);
+}
+
+.import-done {
+  justify-items: start;
+}
+
+.import-done .ok {
+  color: var(--state-online);
+}
+
+.import-problems ul {
+  margin: var(--sp-1) 0 0;
+  padding-left: var(--sp-4);
+  max-height: 220px;
+  overflow: auto;
+  font-size: var(--fs-sm);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .meter i,
+  .drop-zone {
+    transition: none;
+  }
+}

@@ -231,3 +231,28 @@ export interface FaceEvent {
   employee: { id: string; full_name: string; position: string; org_unit: string } | null;
   linked_employee_name: string;
 }
+
+export interface EmployeeImportRow {
+  row: number;
+  full_name: string;
+  personnel_number: string | null;
+  position: string;
+  phone: string;
+  org_path: string;
+  org_unit_id: string | null;
+  action: "create" | "update";
+  photos: { path: string; url: string }[];
+  errors: string[];
+  warnings: string[];
+}
+
+export interface EmployeeImportProgress {
+  total: number;
+  done: number;
+  created: number;
+  updated: number;
+  photos: number;
+  skipped_rows: number[];
+  photo_problems: { row: number; full_name: string; code: string }[];
+  finished: boolean;
+}
