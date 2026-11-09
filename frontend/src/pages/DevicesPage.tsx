@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   ChevronRight,
   FileSpreadsheet,
+  Globe,
   KeyRound,
   Pencil,
   Plus,
@@ -35,6 +36,7 @@ import { AddDeviceModal } from "./devices/AddDeviceModal";
 import { CredentialsModal } from "./devices/CredentialsModal";
 import { DeviceModal } from "./devices/DeviceModal";
 import { ImportModal } from "./devices/ImportModal";
+import { IsupModal, useIsupInfo } from "./devices/IsupModal";
 import { ScanModal } from "./devices/ScanModal";
 import { SyncModal } from "./devices/SyncModal";
 
@@ -43,6 +45,7 @@ type Dialog =
   | { kind: "add"; preset?: { vendor: Vendor; host: string; http_port?: number | null } }
   | { kind: "scan" }
   | { kind: "import" }
+  | { kind: "isup"; deviceId?: string }
   | { kind: "creds" }
   | { kind: "device"; device: Device }
   | { kind: "sync"; device: Device }
@@ -51,6 +54,8 @@ type Dialog =
   | { kind: "deleteCamera"; camera: Camera };
 
 function statusOf(d: Device): Exclude<Status, "all"> {
+  // An ISUP device that has never connected is waiting, not broken.
+  if (d.vendor === "isup" && !d.last_seen_at) return "unknown";
   return d.online === null ? "unknown" : d.online ? "online" : "offline";
 }
 
@@ -70,6 +75,8 @@ export function DevicesPage() {
   const [unitId, setUnitId] = useState("");
   const [open, setOpen] = useState<Set<string>>(new Set());
   const [dialog, setDialog] = useState<Dialog | null>(null);
+  const isupInfo = useIsupInfo();
+  const refused = isupInfo.data?.refused ?? [];
 
   const unitOptions = useMemo(() => flatten(buildTree(units)), [units]);
   const unitNames = useMemo(() => new Map(units.map((u) => [u.id, u.name])), [units]);
@@ -190,6 +197,12 @@ export function DevicesPage() {
               onClick: () => setDialog({ kind: "add" }),
             },
             {
+              icon: Globe,
+              label: t("devices.isup.addMenu"),
+              hint: t("devices.isup.addMenuHint"),
+              onClick: () => setDialog({ kind: "isup" }),
+            },
+            {
               icon: Radar,
               label: t("devices.scanNetwork"),
               hint: t("devices.scanHint"),
@@ -204,6 +217,27 @@ export function DevicesPage() {
           ]}
         />
       </div>
+
+      {/* Devices dialling in with a Device ID Argus does not know, or a wrong key. */}
+      {refused.length > 0 && (
+        <div className="notice isup-refused" role="status">
+          <strong>{t("devices.isup.refusedTitle", { count: refused.length })}</strong>
+          <ul>
+            {refused.slice(0, 5).map((r) => (
+              <li key={r.device_id}>
+                <span className="num">{r.device_id}</span>
+                <span className="muted">{t(`devices.isup.reasons.${r.reason}`, { defaultValue: r.reason })}</span>
+                {r.reason === "unknown" && (
+                  <button className="btn btn-ghost btn-sm" onClick={() => setDialog({ kind: "isup", deviceId: r.device_id })}>
+                    <Plus size={14} />
+                    {t("devices.isup.accept")}
+                  </button>
+                )}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       {devices.length > 0 && (
         <StatFilter
@@ -352,13 +386,17 @@ export function DevicesPage() {
                         <td className="muted cell-model">
                           {t(`devices.vendors.${d.vendor}`)} {d.model && <span className="num">{d.model}</span>}
                         </td>
-                        <td className="num">{d.host}</td>
+                        <td className="num" title={d.vendor === "isup" ? t("devices.isup.deviceId") : undefined}>
+                          {d.vendor === "isup" ? d.isup_id : d.host}
+                        </td>
                         {/* The unit itself; where it sits is in the tooltip. */}
                         <td className="muted cell-unit" title={path}>
                           {unitNames.get(d.org_unit_id)}
                         </td>
                         <td title={lastSeen(d)}>
-                          <span className={`status-dot ${st}`}>{t(`devices.status.${st}`)}</span>
+                          <span className={`status-dot ${st}`}>
+                            {d.vendor === "isup" && !d.last_seen_at ? t("devices.isup.waiting") : t(`devices.status.${st}`)}
+                          </span>
                         </td>
                         <td className="actions">
                           <RowActions
@@ -464,6 +502,9 @@ export function DevicesPage() {
         />
       )}
       {dialog?.kind === "import" && <ImportModal onClose={() => setDialog(null)} />}
+      {dialog?.kind === "isup" && (
+        <IsupModal defaultUnitId={unitId || null} deviceId={dialog.deviceId} onClose={() => setDialog(null)} />
+      )}
       {dialog?.kind === "creds" && <CredentialsModal onClose={() => setDialog(null)} />}
       {dialog?.kind === "device" && <DeviceModal device={dialog.device} onClose={() => setDialog(null)} />}
       {dialog?.kind === "sync" && <SyncModal device={dialog.device} onClose={() => setDialog(null)} />}

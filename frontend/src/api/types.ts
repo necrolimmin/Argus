@@ -12,6 +12,7 @@ export type Vendor =
   | "onvif"
   | "rtsp"
   | "http"
+  | "isup"
   | "other";
 export type DeviceKind = "camera" | "recorder";
 export type Direction = "entry" | "exit" | "none";
@@ -82,7 +83,20 @@ export interface Device {
   firmware: string;
   online: boolean | null;
   last_seen_at: string | null;
+  /** ISUP devices: the Device ID typed into the device. */
+  isup_id: string | null;
   cameras: Camera[];
+}
+
+export interface IsupInfo {
+  /** The server accepts ISUP devices (ARGUS_ISUP_PUBLIC_IP is set). */
+  enabled: boolean;
+  /** The isup-bridge service answers. */
+  bridge: boolean;
+  address: string;
+  port: number;
+  /** Devices that tried to connect with an unknown Device ID or a wrong key. */
+  refused: { device_id: string; reason: string; at: string }[];
 }
 
 export interface Connection {

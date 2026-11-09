@@ -39,6 +39,14 @@ class Settings(BaseSettings):
 
     cors_origins: list[str] = []
 
+    # Hikvision devices that connect by themselves (ISUP 5.0) through the
+    # isup-bridge service. Off while isup_public_ip is empty.
+    isup_public_ip: str = ""
+    isup_port: int = 17660
+    isup_bridge_url: str = "http://isup-bridge:8091"
+    # A main stream nobody watches is closed after this long; sub streams stay.
+    isup_main_idle_seconds: int = 60
+
 
 @lru_cache
 def get_settings() -> Settings:

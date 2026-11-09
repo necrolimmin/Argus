@@ -4111,7 +4111,8 @@ h3 {
 
 /* A status in a table cell is an inline-flex chip, which a cell's ellipsis
    cannot shorten: in a longer language it wraps instead of being cut off. */
-.table td .status {
+.table td .status,
+.table td .status-dot {
   max-width: 100%;
   white-space: normal;
   line-height: var(--lh-sm);
@@ -4132,4 +4133,75 @@ h3 {
 .segmented button {
   flex: none;
   white-space: nowrap;
+}
+
+/* --- devices that connect by themselves (ISUP) ---------------------------- */
+
+/* Something the reader should know before going on; not an error. */
+.notice {
+  margin: 0;
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--r-sm);
+  background: var(--surface-2);
+  box-shadow: inset 3px 0 0 var(--accent);
+  font-size: var(--fs-sm);
+  color: var(--text);
+}
+
+.isup-sheet {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: var(--sp-2) var(--sp-4);
+  margin: 0;
+  padding: var(--sp-3);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+}
+
+.isup-sheet dt {
+  font-size: var(--fs-xs);
+  color: var(--text-3);
+}
+
+.isup-sheet dd {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1);
+  min-height: 28px;
+  margin: 0;
+  font-size: var(--fs-md);
+  color: var(--text);
+  word-break: break-all;
+}
+
+.isup-steps {
+  margin: var(--sp-2) 0 0;
+}
+
+.isup-steps li {
+  grid-template-columns: 28px 1fr;
+  align-items: center;
+}
+
+.isup-steps li::before {
+  grid-row: auto;
+}
+
+.isup-refused {
+  margin-bottom: var(--sp-3);
+}
+
+.isup-refused ul {
+  display: grid;
+  gap: 2px;
+  margin: var(--sp-1) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.isup-refused li {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  min-height: 30px;
 }

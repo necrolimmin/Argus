@@ -1,0 +1,5 @@
+# Hikvision ISUP SDK: licensed, never committed. See README.md.
+sdk/*
+inc/*
+!sdk/.gitkeep
+!inc/.gitkeep

@@ -9,6 +9,7 @@ from app.config import get_settings
 from app.db import SessionLocal
 from app.models import FaceEvent, User, UserRole
 from app.security import hash_password
+from app.services import isup
 from app.services.device_status import refresh_status
 from app.services.media import media_root
 from app.services.streams import go2rtc
@@ -73,4 +74,5 @@ def start_background_jobs() -> list[asyncio.Task]:
         asyncio.create_task(_every(60, _sync_streams, "go2rtc sync")),
         asyncio.create_task(_every(60, refresh_status, "device status")),
         asyncio.create_task(_every(6 * 60 * 60, purge_old_events, "retention")),
+        *([asyncio.create_task(isup.run())] if isup.enabled() else []),
     ]

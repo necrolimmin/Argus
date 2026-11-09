@@ -33,7 +33,8 @@ async def _reachable(host: str, port: int, timeout: float = 3) -> bool:
 
 async def refresh_status() -> None:
     async with SessionLocal() as session:
-        devices = (await session.scalars(select(Device))).unique().all()
+        # ISUP devices have no address to check: the isup sync knows if they are connected.
+        devices = (await session.scalars(select(Device).where(Device.vendor != CameraVendor.isup))).unique().all()
         limit = asyncio.Semaphore(64)
 
         async def check(dev: Device) -> bool:

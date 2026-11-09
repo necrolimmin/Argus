@@ -72,6 +72,28 @@ services:
       - "8555:8555/tcp"
       - "8555:8555/udp"
 
+  # Hikvision devices that connect to Argus by themselves (ISUP 5.0). Needs
+  # the Hikvision ISUP SDK in isup/sdk and isup/inc, so it only starts with
+  # COMPOSE_PROFILES=isup in .env; see isup/README.md.
+  isup-bridge:
+    logging: *logging
+    build: ./isup
+    profiles: ["isup"]
+    restart: unless-stopped
+    depends_on:
+      - go2rtc
+    environment:
+      PUBLIC_IP: ${ARGUS_ISUP_PUBLIC_IP:-}
+      CMS_PORT: ${ARGUS_ISUP_PORT:-17660}
+      STREAM_PORT: ${ARGUS_ISUP_VIDEO_PORT:-17661}
+      API_TOKEN: ${ARGUS_SERVICE_TOKEN}
+      RTSP_BASE: rtsp://go2rtc:8554
+      TZ: ${ARGUS_TIMEZONE:-Asia/Tashkent}
+    ports:
+      - "${ARGUS_ISUP_PORT:-17660}:${ARGUS_ISUP_PORT:-17660}/tcp"
+      - "${ARGUS_ISUP_PORT:-17660}:${ARGUS_ISUP_PORT:-17660}/udp"
+      - "${ARGUS_ISUP_VIDEO_PORT:-17661}:${ARGUS_ISUP_VIDEO_PORT:-17661}/tcp"
+
   recognizer:
     logging: *logging
     build: ./recognizer

@@ -11,6 +11,7 @@ import type {
   ChannelInput,
   Found,
   ImportRow,
+  IsupInfo,
   ProbeResult,
   Employee,
   EmployeeInput,
@@ -187,6 +188,11 @@ export const api = {
     if (!res.ok) throw new ApiError(res.status, `http_${res.status}`);
     return res.blob();
   },
+
+  isupInfo: () => request<IsupInfo>("/api/devices/isup"),
+  isupCreate: (body: { org_unit_id: string; count: number; name: string; device_id: string; key: string }) =>
+    request<{ device: Device; key: string }[]>("/api/devices/isup", json("POST", body)),
+  isupKey: (id: string) => request<{ device_id: string; key: string }>(`/api/devices/${id}/isup-key`),
 
   credentials: () => request<CredentialProfile[]>("/api/credentials"),
   saveCredential: (id: string | null, body: { name: string; username: string; password: string }) =>

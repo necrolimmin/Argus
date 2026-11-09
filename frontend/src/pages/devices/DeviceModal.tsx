@@ -11,6 +11,7 @@ import { UnitSelect } from "../../components/UnitSelect";
 import { errorText } from "../../lib/errors";
 import { useUi } from "../../lib/store";
 import { vendorMeta } from "../../lib/vendors";
+import { IsupDeviceAccess, IsupServer, IsupSteps, useIsupInfo } from "./IsupModal";
 
 /** Name, place, address and login of an existing device. */
 export function DeviceModal({ device, onClose }: { device: Device; onClose: () => void }) {
@@ -19,6 +20,9 @@ export function DeviceModal({ device, onClose }: { device: Device; onClose: () =
   const notify = useUi((s) => s.notify);
   const { data: units = [] } = useUnits();
   const meta = vendorMeta(device.vendor);
+  // An ISUP device has no address or login: it connects to Argus by itself.
+  const isup = device.vendor === "isup";
+  const isupInfo = useIsupInfo();
   const [name, setName] = useState(device.name);
   const [unitId, setUnitId] = useState(device.org_unit_id);
   const [host, setHost] = useState(device.host);
@@ -59,6 +63,7 @@ export function DeviceModal({ device, onClose }: { device: Device; onClose: () =
     <Modal
       title={t("devices.editDevice")}
       onClose={onClose}
+      wide={isup}
       footer={
         <>
           <button className="btn btn-ghost" onClick={onClose}>
@@ -79,7 +84,15 @@ export function DeviceModal({ device, onClose }: { device: Device; onClose: () =
           <span>{t("devices.deviceUnit")}</span>
           <UnitSelect units={units} value={unitId} onChange={setUnitId} required />
         </label>
-        {!meta.url && (
+        {isup && (
+          <div className="field wide stack">
+            <span>{t("devices.isup.connection")}</span>
+            <IsupServer info={isupInfo.data} />
+            <IsupDeviceAccess device={device} />
+            {!device.last_seen_at && <IsupSteps />}
+          </div>
+        )}
+        {!meta.url && !isup && (
           <>
             <label className="field">
               <span>{t("devices.host")}</span>
@@ -99,7 +112,7 @@ export function DeviceModal({ device, onClose }: { device: Device; onClose: () =
             </div>
           </>
         )}
-        <CredentialPicker value={cred} onChange={setCred} keepHint />
+        {!isup && <CredentialPicker value={cred} onChange={setCred} keepHint />}
         {(device.model || device.serial) && (
           <p className="lead wide">
             {[device.model, device.serial, device.firmware].filter(Boolean).join(", ")}

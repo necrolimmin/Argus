@@ -5,6 +5,7 @@ import base64
 import csv
 import io
 import uuid
+from datetime import datetime, timezone
 
 from fastapi import APIRouter, HTTPException, Response, UploadFile, status
 from sqlalchemy import or_, select
@@ -26,12 +27,17 @@ from app.schemas import (
     DuplicateOut,
     ImportIn,
     ImportRow,
+    IsupCreate,
+    IsupCreated,
+    IsupInfo,
+    IsupRefusal,
     ProbeChannelOut,
     ProbeOut,
 )
 from app.security import decrypt_secret, encrypt_secret
+from app.services import isup
 from app.services.org import get_unit_in_scope
-from app.services.probe import ProbeResult, ProbeTarget, probe
+from app.services.probe import ProbeChannel, ProbeResult, ProbeTarget, probe
 from app.services.streams import credentials, safe_register, safe_unregister
 
 router = APIRouter(prefix="/devices", tags=["devices"])
@@ -441,6 +447,68 @@ async def import_devices(body: ImportIn, user: AdminUser, session: Session):
     return {"devices": len(created), "cameras": cameras, "skipped_rows": sorted(skipped)}
 
 
+# --- devices that connect by themselves (ISUP) ----------------------------------
+
+
+@router.get("/isup", response_model=IsupInfo)
+async def isup_info(_: AdminUser):
+    """Where devices should connect, and who tried with an unknown Device ID or key."""
+    from app.config import get_settings
+
+    s = get_settings()
+    state = isup.state()
+    refused = [
+        IsupRefusal(device_id=r["id"], reason=r.get("reason", ""), at=datetime.fromtimestamp(r.get("at", 0), timezone.utc))
+        for r in state.get("rejected", [])
+        if isup.ID_RE.match(str(r.get("id", "")))
+    ]
+    return IsupInfo(enabled=isup.enabled(), bridge=bool(state), address=s.isup_public_ip, port=s.isup_port,
+                    refused=sorted(refused, key=lambda r: r.at, reverse=True))
+
+
+@router.post("/isup", response_model=list[IsupCreated], status_code=status.HTTP_201_CREATED)
+async def isup_create(body: IsupCreate, user: AdminUser, session: Session):
+    await get_unit_in_scope(session, user, body.org_unit_id)
+    taken = set((await session.scalars(select(Device.isup_id).where(Device.isup_id.is_not(None)))).all())
+    if body.device_id:
+        if body.device_id in taken:
+            raise HTTPException(status.HTTP_409_CONFLICT, "isup_id_taken")
+        ids = [body.device_id]
+    else:
+        ids = []
+        while len(ids) < body.count:
+            candidate = isup.new_device_id()
+            if candidate not in taken and candidate not in ids:
+                ids.append(candidate)
+    made = []
+    for n, device_id in enumerate(ids, start=1):
+        key = body.key or isup.new_key()
+        name = body.name.strip()
+        dev = Device(
+            name=(f"{name} {n}" if name and len(ids) > 1 else name or device_id)[:200],
+            vendor=CameraVendor.isup,
+            isup_id=device_id,
+            password_enc=encrypt_secret(key),
+            org_unit_id=body.org_unit_id,
+        )
+        session.add(dev)
+        made.append((dev, key))
+    await session.commit()
+    out = []
+    for dev, key in made:
+        out.append(IsupCreated(device=device_out(await _load(session, dev.id)), key=key))
+    return out
+
+
+@router.get("/{device_id}/isup-key")
+async def isup_key(device_id: uuid.UUID, _: AdminUser, session: Session):
+    """The key to type into the device. Shown only on request, to administrators."""
+    dev = await _load(session, device_id)
+    if dev.vendor != CameraVendor.isup:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "device_not_found")
+    return {"device_id": dev.isup_id, "key": decrypt_secret(dev.password_enc)}
+
+
 # --- one device ----------------------------------------------------------------
 
 
@@ -452,10 +520,12 @@ async def update_device(device_id: uuid.UUID, body: DeviceUpdate, user: AdminUse
         await _resolve_credentials(session, body.credential_id, "", "")
     dev.name = body.name.strip()
     dev.org_unit_id = body.org_unit_id
-    if dev.vendor not in URL_VENDORS:
-        dev.host = body.host.strip()
-    dev.rtsp_port, dev.http_port = body.rtsp_port, body.http_port
-    _set_credentials(dev, body.credential_id, body.username, body.password, keep_password=True)
+    # An ISUP device has no address or login here: only its name and unit change.
+    if dev.vendor != CameraVendor.isup:
+        if dev.vendor not in URL_VENDORS:
+            dev.host = body.host.strip()
+        dev.rtsp_port, dev.http_port = body.rtsp_port, body.http_port
+        _set_credentials(dev, body.credential_id, body.username, body.password, keep_password=True)
     await session.commit()
     dev = await _load(session, device_id)
     await _register_all(dev)
@@ -480,6 +550,17 @@ async def sync_device(device_id: uuid.UUID, _: AdminUser, session: Session):
     returned without `camera_id`, to be added with POST .../cameras.
     """
     dev = await _load(session, device_id)
+    if dev.vendor == CameraVendor.isup:
+        # Nothing to dial: the bridge reports what the connected device has.
+        info = isup.connected(dev.isup_id)
+        if info is None:
+            return await _probe_out(session, ProbeResult(error="isup_not_connected"), dev)
+        chans = isup.auto_channels(info) or []
+        res = ProbeResult(ok=True, kind=DeviceKind.recorder if len(chans) > 1 else DeviceKind.camera,
+                          name=str(info.get("name") or ""), model=str(info.get("model") or ""),
+                          serial=str(info.get("serial") or ""), firmware=str(info.get("firmware") or ""),
+                          channels=[ProbeChannel(channel=c, name=n) for c, n in chans])
+        return await _probe_out(session, res, dev)
     username, password = credentials(dev)
     first = dev.cameras[0] if dev.cameras else None
     res = await probe(_target(dev, username, password,

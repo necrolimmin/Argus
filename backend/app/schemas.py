@@ -282,7 +282,38 @@ class DeviceOut(ORM):
     firmware: str
     online: bool | None
     last_seen_at: datetime | None
+    isup_id: str | None = None
     cameras: list[CameraOut]
+
+
+class IsupCreate(BaseModel):
+    """Devices that will connect by themselves: one Device ID and key each."""
+
+    org_unit_id: uuid.UUID
+    count: int = Field(default=1, ge=1, le=50)
+    name: str = Field(default="", max_length=200)
+    # A device already set up by the installer: its own ID and key.
+    device_id: str = Field(default="", max_length=64, pattern=r"^[A-Za-z0-9_-]*$")
+    key: str = Field(default="", max_length=32, pattern=r"^(|[A-Za-z0-9]{8,32})$")
+
+
+class IsupCreated(BaseModel):
+    device: DeviceOut
+    key: str
+
+
+class IsupRefusal(BaseModel):
+    device_id: str
+    reason: str
+    at: datetime
+
+
+class IsupInfo(BaseModel):
+    enabled: bool
+    bridge: bool
+    address: str
+    port: int
+    refused: list[IsupRefusal]
 
 
 class ChannelsIn(BaseModel):

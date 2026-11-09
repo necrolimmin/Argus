@@ -19,6 +19,9 @@ from app.security import decrypt_secret
 log = logging.getLogger(__name__)
 
 PREFIX = "cam_"
+# go2rtc source of an ISUP camera's streams. The isup-bridge pushes the video
+# in; this address is never reachable, so go2rtc only ever gets the push.
+PUSH_SOURCE = "rtsp://127.0.0.1:1/isup"
 
 
 def stream_name(camera_id, quality: StreamQuality) -> str:
@@ -80,6 +83,8 @@ def credentials(dev: Device) -> tuple[str, str]:
 
 def rtsp_url(cam: Camera, quality: StreamQuality) -> str:
     dev = cam.device
+    if dev.vendor == CameraVendor.isup:
+        return PUSH_SOURCE
     username, password = credentials(dev)
     custom = cam.rtsp_main if quality == StreamQuality.main else (cam.rtsp_sub or cam.rtsp_main)
     if custom:

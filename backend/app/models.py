@@ -115,6 +115,9 @@ class CameraVendor(str, enum.Enum):
     onvif = "onvif"  # any ONVIF camera; stream URLs come from the device
     rtsp = "rtsp"  # raw RTSP link
     http = "http"  # HTTP MJPEG / snapshot stream
+    # Hikvision device that registers to Argus by itself (ISUP 5.0); its
+    # video arrives through the isup-bridge service, not from an address.
+    isup = "isup"
     # Kept for rows written before stage 2; treated like `rtsp`.
     other = "other"
 
@@ -177,6 +180,9 @@ class Device(Base):
     serial: Mapped[str] = mapped_column(String(100), default="", index=True)
     mac: Mapped[str] = mapped_column(String(32), default="", index=True)
     firmware: Mapped[str] = mapped_column(String(200), default="")
+    # ISUP devices: the Device ID set on the device. Its encryption key is
+    # kept in password_enc.
+    isup_id: Mapped[str | None] = mapped_column(String(64), unique=True)
 
     # None until the first status check.
     online: Mapped[bool | None] = mapped_column(Boolean)
