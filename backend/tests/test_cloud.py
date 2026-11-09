@@ -220,7 +220,9 @@ def test_bridge_gets_sessions_and_only_needed_streams(client, admin, tree, cloud
                    json={**body, "face_recognition": True, "recognition_stream": "main"})
     assert r.status_code == 200, r.text
     client.portal.call(cloud.sync_once)
-    assert {(w["serial"], w["channel"], w["sub"]) for w in bridge.want} == {("NVR001", 1, True), ("NVR001", 2, False)}
+    # Cloud cameras always use their sub stream: the relay breaks full-resolution video.
+    assert {(w["serial"], w["channel"], w["sub"]) for w in bridge.want} == {("NVR001", 1, True), ("NVR001", 2, True)}
+    assert all(w["target"].endswith("_sub") for w in bridge.want)
     assert all(w["account"] == acc["id"] for w in bridge.want)
 
     # The bridge reports a problem; the account list shows it.

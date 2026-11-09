@@ -164,23 +164,21 @@ def forget(account_id: uuid.UUID) -> None:
 
 
 def want_list(cameras: list[Camera], now: float, watched: dict[str, float], live: set[str]) -> list[dict]:
-    """Streams the bridge should keep open."""
+    """Streams the bridge should keep open: one per camera, its sub stream.
+
+    The main stream is never pulled from the cloud (see streams.playable_quality).
+    """
     idle = get_settings().cloud_idle_seconds
     out = []
     for cam in cameras:
         dev = cam.device
         if not cam.enabled or dev.cloud_account_id is None or not dev.serial:
             continue
-        for q in StreamQuality:
-            name = stream_name(cam.id, q)
-            needed = (
-                (cam.face_recognition and cam.recognition_stream == q)
-                or now - watched.get(name, 0) < idle
-                or name in live
-            )
-            if needed:
-                out.append({"target": name, "account": str(dev.cloud_account_id), "serial": dev.serial,
-                            "channel": cam.channel, "sub": q == StreamQuality.sub})
+        names = [stream_name(cam.id, q) for q in StreamQuality]
+        needed = cam.face_recognition or any(now - watched.get(n, 0) < idle or n in live for n in names)
+        if needed:
+            out.append({"target": stream_name(cam.id, StreamQuality.sub), "account": str(dev.cloud_account_id),
+                        "serial": dev.serial, "channel": cam.channel, "sub": True})
     return sorted(out, key=lambda w: w["target"])
 
 

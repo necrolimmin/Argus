@@ -92,9 +92,24 @@ def rtsp_url(cam: Camera, quality: StreamQuality) -> str:
     return template_url(dev.vendor, dev.host, dev.rtsp_port, cam.channel, quality, username, password)
 
 
+def playable_quality(cam: Camera, quality: StreamQuality) -> StreamQuality:
+    """The stream actually used for a camera.
+
+    Cloud cameras always use their sub stream: the vendor's relay loses
+    pieces of a full-resolution stream (measured on a 4K camera: 15 KB/s
+    with gaps, every frame after the first broken), while the sub stream
+    arrives intact. One relay session per camera also spares the owner's
+    upload. The sub stream's resolution can be raised on the camera.
+    """
+    if cam.device.vendor == CameraVendor.cloud:
+        return StreamQuality.sub
+    return quality
+
+
 def restream_url(cam: Camera) -> str:
     """Where the recognizer reads this camera from (through go2rtc)."""
-    return f"{get_settings().go2rtc_rtsp_url}/{stream_name(cam.id, cam.recognition_stream)}"
+    q = playable_quality(cam, cam.recognition_stream)
+    return f"{get_settings().go2rtc_rtsp_url}/{stream_name(cam.id, q)}"
 
 
 class Go2rtcError(Exception):

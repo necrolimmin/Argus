@@ -14,7 +14,14 @@ from app.models import Camera, CameraVendor, OrgUnit, StreamQuality, User, UserR
 from app.schemas import CameraOut, CameraUpdate
 from app.services import cloud, isup
 from app.services.org import get_unit_in_scope
-from app.services.streams import Go2rtcError, go2rtc, safe_register, safe_unregister, stream_name
+from app.services.streams import (
+    Go2rtcError,
+    go2rtc,
+    playable_quality,
+    safe_register,
+    safe_unregister,
+    stream_name,
+)
 
 log = logging.getLogger(__name__)
 
@@ -116,6 +123,7 @@ async def webrtc(
     if cam.device.vendor == CameraVendor.isup and isup.enabled():
         await isup.touch(cam, quality)
     elif cam.device.vendor == CameraVendor.cloud:
+        quality = playable_quality(cam, quality)
         await cloud.touch(cam, quality)
     name = stream_name(cam.id, quality)
     try:
@@ -149,6 +157,7 @@ async def mse(ws: WebSocket, camera_id: uuid.UUID, token: str = "", quality: Str
     if cam.device.vendor == CameraVendor.isup and isup.enabled():
         await isup.touch(cam, quality)
     elif cam.device.vendor == CameraVendor.cloud:
+        quality = playable_quality(cam, quality)
         await cloud.touch(cam, quality)
     name = stream_name(cam.id, quality)
     try:
