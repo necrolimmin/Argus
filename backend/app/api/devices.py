@@ -35,7 +35,8 @@ from app.schemas import (
     ProbeOut,
 )
 from app.security import decrypt_secret, encrypt_secret
-from app.services import isup
+from app.services import cloud, isup
+from app.services.cloud_api import CloudError
 from app.services.org import get_unit_in_scope
 from app.services.probe import ProbeChannel, ProbeResult, ProbeTarget, probe
 from app.services.streams import credentials, safe_register, safe_unregister
@@ -520,8 +521,8 @@ async def update_device(device_id: uuid.UUID, body: DeviceUpdate, user: AdminUse
         await _resolve_credentials(session, body.credential_id, "", "")
     dev.name = body.name.strip()
     dev.org_unit_id = body.org_unit_id
-    # An ISUP device has no address or login here: only its name and unit change.
-    if dev.vendor != CameraVendor.isup:
+    # ISUP and cloud devices have no address or login here: only name and unit change.
+    if dev.vendor not in (CameraVendor.isup, CameraVendor.cloud):
         if dev.vendor not in URL_VENDORS:
             dev.host = body.host.strip()
         dev.rtsp_port, dev.http_port = body.rtsp_port, body.http_port
@@ -561,6 +562,8 @@ async def sync_device(device_id: uuid.UUID, _: AdminUser, session: Session):
                           serial=str(info.get("serial") or ""), firmware=str(info.get("firmware") or ""),
                           channels=[ProbeChannel(channel=c, name=n) for c, n in chans])
         return await _probe_out(session, res, dev)
+    if dev.vendor == CameraVendor.cloud:
+        return await _sync_cloud(session, dev)
     username, password = credentials(dev)
     first = dev.cameras[0] if dev.cameras else None
     res = await probe(_target(dev, username, password,
@@ -582,6 +585,35 @@ async def sync_device(device_id: uuid.UUID, _: AdminUser, session: Session):
         dev = await _load(session, device_id)
         if port_changed:
             await _register_all(dev)
+    return await _probe_out(session, res, dev)
+
+
+async def _sync_cloud(session: AsyncSession, dev: Device) -> ProbeOut:
+    """The account's current view of the device: status, model and channels."""
+    from app.models import CloudAccount
+
+    acc = await session.get(CloudAccount, dev.cloud_account_id)
+    if acc is None:
+        return await _probe_out(session, ProbeResult(error="cloud_account_not_found"), dev)
+    try:
+        found = {d["serial"]: d for d in await cloud.devices(acc)}
+    except CloudError as exc:
+        await session.commit()
+        return await _probe_out(session, ProbeResult(error=exc.code), dev)
+    info = found.get(dev.serial)
+    if info is None:
+        await session.commit()
+        return await _probe_out(session, ProbeResult(error="cloud_device_not_found"), dev)
+    dev.online = info["online"]
+    dev.model = info["model"] or dev.model
+    listed = {c["channel"] for c in info["channels"]}
+    for cam in dev.cameras:
+        cam.missing = cam.channel not in listed
+    await session.commit()
+    dev = await _load(session, dev.id)
+    res = ProbeResult(ok=True, kind=DeviceKind.recorder if len(listed) > 1 else DeviceKind.camera,
+                      name=info["name"], model=info["model"], serial=info["serial"],
+                      channels=[ProbeChannel(channel=c["channel"], name=c["name"]) for c in info["channels"]])
     return await _probe_out(session, res, dev)
 
 

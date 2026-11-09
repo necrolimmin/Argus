@@ -12,7 +12,7 @@ from app.db import SessionLocal
 from app.deps import AdminUser, CurrentUser, Session, can_watch, scope_path, user_from_token
 from app.models import Camera, CameraVendor, OrgUnit, StreamQuality, User, UserRole
 from app.schemas import CameraOut, CameraUpdate
-from app.services import isup
+from app.services import cloud, isup
 from app.services.org import get_unit_in_scope
 from app.services.streams import Go2rtcError, go2rtc, safe_register, safe_unregister, stream_name
 
@@ -115,6 +115,8 @@ async def webrtc(
         raise HTTPException(status.HTTP_409_CONFLICT, "camera_disabled")
     if cam.device.vendor == CameraVendor.isup and isup.enabled():
         await isup.touch(cam, quality)
+    elif cam.device.vendor == CameraVendor.cloud:
+        await cloud.touch(cam, quality)
     name = stream_name(cam.id, quality)
     try:
         try:
@@ -146,6 +148,8 @@ async def mse(ws: WebSocket, camera_id: uuid.UUID, token: str = "", quality: Str
     await ws.accept()
     if cam.device.vendor == CameraVendor.isup and isup.enabled():
         await isup.touch(cam, quality)
+    elif cam.device.vendor == CameraVendor.cloud:
+        await cloud.touch(cam, quality)
     name = stream_name(cam.id, quality)
     try:
         await go2rtc().ensure(cam, name)

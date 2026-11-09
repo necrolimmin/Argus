@@ -9,6 +9,10 @@ import type {
   DeviceCreate,
   DeviceUpdate,
   ChannelInput,
+  CloudAccount,
+  CloudDevice,
+  CloudInfo,
+  CloudProvider,
   Found,
   ImportRow,
   IsupInfo,
@@ -193,6 +197,16 @@ export const api = {
   isupCreate: (body: { org_unit_id: string; count: number; name: string; device_id: string; key: string }) =>
     request<{ device: Device; key: string }[]>("/api/devices/isup", json("POST", body)),
   isupKey: (id: string) => request<{ device_id: string; key: string }>(`/api/devices/${id}/isup-key`),
+
+  cloudInfo: () => request<CloudInfo>("/api/cloud"),
+  cloudAdd: (body: { provider: CloudProvider; login: string; password: string; name: string; code: string }) =>
+    request<CloudAccount>("/api/cloud/accounts", json("POST", body)),
+  cloudUpdate: (id: string, body: { name?: string; password?: string; code?: string }) =>
+    request<CloudAccount>(`/api/cloud/accounts/${id}`, json("PUT", body)),
+  cloudDelete: (id: string) => request<void>(`/api/cloud/accounts/${id}`, { method: "DELETE" }),
+  cloudDevices: (id: string) => request<CloudDevice[]>(`/api/cloud/accounts/${id}/devices`),
+  cloudAddCameras: (id: string, body: { org_unit_id: string; items: { serial: string; channels: number[] }[] }) =>
+    request<Device[]>(`/api/cloud/accounts/${id}/add`, json("POST", body)),
 
   credentials: () => request<CredentialProfile[]>("/api/credentials"),
   saveCredential: (id: string | null, body: { name: string; username: string; password: string }) =>

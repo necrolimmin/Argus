@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   ChevronRight,
+  Cloud,
   FileSpreadsheet,
   Globe,
   KeyRound,
@@ -28,11 +29,12 @@ import { type RowAction, RowActions } from "../components/RowActions";
 import { StatFilter } from "../components/StatFilter";
 import { EmptyState, ErrorState, Skeleton } from "../components/States";
 import { intlLocale } from "../i18n";
-import { errorText } from "../lib/errors";
+import { codeText, errorText } from "../lib/errors";
 import { isAdmin, useAuth, useUi } from "../lib/store";
 import { buildTree, flatten, unitPath } from "../lib/tree";
 import { CameraModal } from "./CameraModal";
 import { AddDeviceModal } from "./devices/AddDeviceModal";
+import { CloudModal, useCloudInfo } from "./devices/CloudModal";
 import { CredentialsModal } from "./devices/CredentialsModal";
 import { DeviceModal } from "./devices/DeviceModal";
 import { ImportModal } from "./devices/ImportModal";
@@ -46,6 +48,7 @@ type Dialog =
   | { kind: "scan" }
   | { kind: "import" }
   | { kind: "isup"; deviceId?: string }
+  | { kind: "cloud" }
   | { kind: "creds" }
   | { kind: "device"; device: Device }
   | { kind: "sync"; device: Device }
@@ -77,6 +80,9 @@ export function DevicesPage() {
   const [dialog, setDialog] = useState<Dialog | null>(null);
   const isupInfo = useIsupInfo();
   const refused = isupInfo.data?.refused ?? [];
+  const cloudInfo = useCloudInfo(admin);
+  // Accounts that cannot log in, and cloud cameras that will not play.
+  const cloudTrouble = (cloudInfo.data?.accounts ?? []).filter((a) => a.error || a.problems.length);
 
   const unitOptions = useMemo(() => flatten(buildTree(units)), [units]);
   const unitNames = useMemo(() => new Map(units.map((u) => [u.id, u.name])), [units]);
@@ -203,6 +209,12 @@ export function DevicesPage() {
               onClick: () => setDialog({ kind: "isup" }),
             },
             {
+              icon: Cloud,
+              label: t("devices.cloud.addMenu"),
+              hint: t("devices.cloud.addMenuHint"),
+              onClick: () => setDialog({ kind: "cloud" }),
+            },
+            {
               icon: Radar,
               label: t("devices.scanNetwork"),
               hint: t("devices.scanHint"),
@@ -233,6 +245,27 @@ export function DevicesPage() {
                     {t("devices.isup.accept")}
                   </button>
                 )}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {cloudTrouble.length > 0 && (
+        <div className="notice isup-refused" role="status">
+          <strong>{t("devices.cloud.troubleTitle", { count: cloudTrouble.length })}</strong>
+          <ul>
+            {cloudTrouble.slice(0, 5).map((a) => (
+              <li key={a.id}>
+                <span>{a.name || a.login}</span>
+                <span className="muted">
+                  {a.error
+                    ? codeText(t, a.error)
+                    : t("devices.cloud.problemCount", { count: a.problems.length })}
+                </span>
+                <button className="btn btn-ghost btn-sm" onClick={() => setDialog({ kind: "cloud" })}>
+                  {t("devices.cloud.open")}
+                </button>
               </li>
             ))}
           </ul>
@@ -386,8 +419,17 @@ export function DevicesPage() {
                         <td className="muted cell-model">
                           {t(`devices.vendors.${d.vendor}`)} {d.model && <span className="num">{d.model}</span>}
                         </td>
-                        <td className="num" title={d.vendor === "isup" ? t("devices.isup.deviceId") : undefined}>
-                          {d.vendor === "isup" ? d.isup_id : d.host}
+                        <td
+                          className="num"
+                          title={
+                            d.vendor === "isup"
+                              ? t("devices.isup.deviceId")
+                              : d.vendor === "cloud"
+                                ? t("devices.cloud.serial")
+                                : undefined
+                          }
+                        >
+                          {d.vendor === "isup" ? d.isup_id : d.vendor === "cloud" ? d.serial : d.host}
                         </td>
                         {/* The unit itself; where it sits is in the tooltip. */}
                         <td className="muted cell-unit" title={path}>
@@ -505,6 +547,7 @@ export function DevicesPage() {
       {dialog?.kind === "isup" && (
         <IsupModal defaultUnitId={unitId || null} deviceId={dialog.deviceId} onClose={() => setDialog(null)} />
       )}
+      {dialog?.kind === "cloud" && <CloudModal defaultUnitId={unitId || null} onClose={() => setDialog(null)} />}
       {dialog?.kind === "creds" && <CredentialsModal onClose={() => setDialog(null)} />}
       {dialog?.kind === "device" && <DeviceModal device={dialog.device} onClose={() => setDialog(null)} />}
       {dialog?.kind === "sync" && <SyncModal device={dialog.device} onClose={() => setDialog(null)} />}

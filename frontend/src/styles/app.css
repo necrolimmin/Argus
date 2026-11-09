@@ -4205,3 +4205,162 @@ h3 {
   gap: var(--sp-3);
   min-height: 30px;
 }
+
+/* --- Hik-Connect / EZVIZ accounts ------------------------------------------ */
+
+.cloud-accounts,
+.cloud-problems,
+.cloud-devices,
+.cloud-channels {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cloud-accounts {
+  display: grid;
+  gap: var(--sp-2);
+}
+
+.cloud-account {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: start;
+  gap: var(--sp-3);
+  padding: var(--sp-3);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--surface-1);
+}
+
+.cloud-account.has-trouble {
+  box-shadow: inset 3px 0 0 var(--state-offline);
+}
+
+.cloud-badge {
+  padding: 2px var(--sp-2);
+  border-radius: var(--r-xs);
+  background: var(--surface-3);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.cloud-account-main {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.cloud-account-main strong,
+.cloud-account-main > .muted {
+  overflow-wrap: anywhere;
+}
+
+.cloud-account-main > .muted {
+  font-size: var(--fs-sm);
+}
+
+.cloud-trouble,
+.cloud-problems li,
+.cloud-warn {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-1);
+  font-size: var(--fs-sm);
+}
+
+.cloud-trouble svg,
+.cloud-problems svg,
+.cloud-warn svg {
+  flex: none;
+  margin-top: 3px;
+  color: var(--state-offline);
+}
+
+.cloud-problems {
+  display: grid;
+  gap: 2px;
+  margin-top: var(--sp-1);
+}
+
+.cloud-account-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1);
+}
+
+.cloud-devices {
+  display: grid;
+  gap: var(--sp-2);
+  max-height: min(56vh, 520px);
+}
+
+.cloud-device {
+  padding: var(--sp-2) var(--sp-3);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+}
+
+.cloud-device-head {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.cloud-device-name {
+  display: grid;
+  min-width: 0;
+}
+
+.cloud-device-name .muted {
+  font-size: var(--fs-xs);
+  overflow-wrap: anywhere;
+}
+
+.cloud-warn {
+  margin: var(--sp-2) 0 0;
+}
+
+.cloud-channels {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 2px var(--sp-3);
+  margin: var(--sp-2) 0 0 26px;
+}
+
+.cloud-channels .check {
+  min-height: 30px;
+}
+
+.cloud-channels .check > .muted:last-child {
+  margin-left: auto;
+  font-size: var(--fs-xs);
+}
+
+.cloud-already {
+  display: block;
+  margin: var(--sp-1) 0 0 26px;
+  font-size: var(--fs-xs);
+}
+
+@media (max-width: 640px) {
+  .cloud-account {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .cloud-badge {
+    justify-self: start;
+  }
+
+  .cloud-channels {
+    margin-left: 0;
+  }
+}
+
+.cloud-privacy {
+  margin: 0;
+  font-size: var(--fs-sm);
+  color: var(--text-3);
+}

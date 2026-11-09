@@ -22,6 +22,8 @@ export function DeviceModal({ device, onClose }: { device: Device; onClose: () =
   const meta = vendorMeta(device.vendor);
   // An ISUP device has no address or login: it connects to Argus by itself.
   const isup = device.vendor === "isup";
+  // A cloud device is reached through its account, not an address.
+  const cloud = device.vendor === "cloud";
   const isupInfo = useIsupInfo();
   const [name, setName] = useState(device.name);
   const [unitId, setUnitId] = useState(device.org_unit_id);
@@ -92,7 +94,10 @@ export function DeviceModal({ device, onClose }: { device: Device; onClose: () =
             {!device.last_seen_at && <IsupSteps />}
           </div>
         )}
-        {!meta.url && !isup && (
+        {cloud && (
+          <p className="lead wide">{t("devices.cloud.deviceNote", { serial: device.serial })}</p>
+        )}
+        {!meta.url && !isup && !cloud && (
           <>
             <label className="field">
               <span>{t("devices.host")}</span>
@@ -112,7 +117,7 @@ export function DeviceModal({ device, onClose }: { device: Device; onClose: () =
             </div>
           </>
         )}
-        {!isup && <CredentialPicker value={cred} onChange={setCred} keepHint />}
+        {!isup && !cloud && <CredentialPicker value={cred} onChange={setCred} keepHint />}
         {(device.model || device.serial) && (
           <p className="lead wide">
             {[device.model, device.serial, device.firmware].filter(Boolean).join(", ")}

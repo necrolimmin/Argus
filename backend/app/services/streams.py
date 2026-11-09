@@ -19,7 +19,7 @@ from app.security import decrypt_secret
 log = logging.getLogger(__name__)
 
 PREFIX = "cam_"
-# go2rtc source of an ISUP camera's streams. The isup-bridge pushes the video
+# go2rtc source of ISUP and cloud cameras' streams. The bridges push the video
 # in; this address is never reachable, so go2rtc only ever gets the push.
 PUSH_SOURCE = "rtsp://127.0.0.1:1/isup"
 
@@ -83,7 +83,7 @@ def credentials(dev: Device) -> tuple[str, str]:
 
 def rtsp_url(cam: Camera, quality: StreamQuality) -> str:
     dev = cam.device
-    if dev.vendor == CameraVendor.isup:
+    if dev.vendor in (CameraVendor.isup, CameraVendor.cloud):
         return PUSH_SOURCE
     username, password = credentials(dev)
     custom = cam.rtsp_main if quality == StreamQuality.main else (cam.rtsp_sub or cam.rtsp_main)
@@ -200,3 +200,24 @@ async def safe_unregister(camera_id) -> None:
         await go2rtc().unregister(camera_id)
     except Exception as exc:  # noqa: BLE001
         log.warning("go2rtc unregister %s failed: %s", camera_id, exc)
+
+
+async def live_streams() -> set[str]:
+    """go2rtc streams someone is watching right now."""
+    try:
+        r = await go2rtc().client.get("/api/streams")
+        r.raise_for_status()
+        return {name for name, s in (r.json() or {}).items() if (s or {}).get("consumers")}
+    except Exception:  # noqa: BLE001
+        return set()
+
+
+async def has_video(name: str) -> bool:
+    """A pushed stream (ISUP, cloud) is arriving in go2rtc."""
+    try:
+        r = await go2rtc().client.get("/api/streams", params={"src": name})
+        if r.status_code != 200:
+            return False
+        return any(p.get("medias") for p in (r.json() or {}).get("producers") or [])
+    except Exception:  # noqa: BLE001
+        return False

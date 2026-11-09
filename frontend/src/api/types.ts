@@ -13,6 +13,7 @@ export type Vendor =
   | "rtsp"
   | "http"
   | "isup"
+  | "cloud"
   | "other";
 export type DeviceKind = "camera" | "recorder";
 export type Direction = "entry" | "exit" | "none";
@@ -85,7 +86,42 @@ export interface Device {
   last_seen_at: string | null;
   /** ISUP devices: the Device ID typed into the device. */
   isup_id: string | null;
+  /** Cloud devices: the Hik-Connect / EZVIZ account they come from. */
+  cloud_account_id: string | null;
   cameras: Camera[];
+}
+
+export type CloudProvider = "hik" | "ezviz";
+
+export interface CloudAccount {
+  id: string;
+  name: string;
+  provider: CloudProvider;
+  login: string;
+  /** Why the last login or device list failed; "" when fine. */
+  error: string;
+  checked_at: string | null;
+  devices: number;
+  cameras: number;
+  /** Cameras the bridge cannot show: encrypted, offline, failed. */
+  problems: { camera_id: string; camera_name: string; state: string }[];
+}
+
+export interface CloudInfo {
+  /** The cloud-bridge service answers. */
+  bridge: boolean;
+  accounts: CloudAccount[];
+}
+
+export interface CloudDevice {
+  serial: string;
+  name: string;
+  model: string;
+  online: boolean;
+  /** "Video encryption" is on in the owner's app: Argus cannot show it. */
+  encrypted: boolean;
+  device_id: string | null;
+  channels: { channel: number; name: string; camera_id: string | null }[];
 }
 
 export interface IsupInfo {

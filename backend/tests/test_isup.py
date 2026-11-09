@@ -44,7 +44,7 @@ def bridge(monkeypatch):
     async def nothing(*args, **kwargs):
         return None
 
-    monkeypatch.setattr(isup, "_live_streams", nobody_watching)
+    monkeypatch.setattr(isup, "live_streams", nobody_watching)
     monkeypatch.setattr(isup, "safe_register", nothing)
     monkeypatch.setattr(isup, "_last_keys", "")
     monkeypatch.setattr(isup, "_last_want", "")

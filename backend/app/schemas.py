@@ -1,6 +1,7 @@
 import re
 import uuid
 from datetime import datetime
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
@@ -283,6 +284,7 @@ class DeviceOut(ORM):
     online: bool | None
     last_seen_at: datetime | None
     isup_id: str | None = None
+    cloud_account_id: uuid.UUID | None = None
     cameras: list[CameraOut]
 
 
@@ -314,6 +316,70 @@ class IsupInfo(BaseModel):
     address: str
     port: int
     refused: list[IsupRefusal]
+
+
+class CloudAccountIn(BaseModel):
+    provider: Literal["hik", "ezviz"]
+    login: str = Field(min_length=1, max_length=200)
+    password: str = Field(min_length=1, max_length=200)
+    name: str = Field(default="", max_length=200)
+    # One-time code the cloud sent the owner, when two-step login is on.
+    code: str = Field(default="", max_length=12, pattern=r"^[0-9A-Za-z]*$")
+
+
+class CloudAccountUpdate(BaseModel):
+    name: str | None = Field(default=None, max_length=200)
+    password: str = Field(default="", max_length=200)
+    code: str = Field(default="", max_length=12, pattern=r"^[0-9A-Za-z]*$")
+
+
+class CloudProblem(BaseModel):
+    camera_id: uuid.UUID
+    camera_name: str
+    state: str
+
+
+class CloudAccountOut(BaseModel):
+    id: uuid.UUID
+    name: str
+    provider: str
+    login: str
+    error: str
+    checked_at: datetime | None
+    devices: int
+    cameras: int
+    problems: list[CloudProblem] = []
+
+
+class CloudInfo(BaseModel):
+    bridge: bool
+    accounts: list[CloudAccountOut]
+
+
+class CloudChannel(BaseModel):
+    channel: int
+    name: str
+    camera_id: uuid.UUID | None = None
+
+
+class CloudDevice(BaseModel):
+    serial: str
+    name: str
+    model: str
+    online: bool
+    encrypted: bool
+    device_id: uuid.UUID | None = None
+    channels: list[CloudChannel]
+
+
+class CloudPick(BaseModel):
+    serial: str = Field(min_length=1, max_length=100)
+    channels: list[int] = Field(min_length=1, max_length=256)
+
+
+class CloudAddIn(BaseModel):
+    org_unit_id: uuid.UUID
+    items: list[CloudPick] = Field(min_length=1, max_length=500)
 
 
 class ChannelsIn(BaseModel):

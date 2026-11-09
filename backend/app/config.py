@@ -47,6 +47,11 @@ class Settings(BaseSettings):
     # A main stream nobody watches is closed after this long; sub streams stay.
     isup_main_idle_seconds: int = 60
 
+    # Cameras from Hik-Connect / EZVIZ accounts: video through cloud-bridge.
+    cloud_bridge_url: str = "http://cloud-bridge:8092"
+    # A cloud stream nobody watches is closed after this long.
+    cloud_idle_seconds: int = 60
+
 
 @lru_cache
 def get_settings() -> Settings:

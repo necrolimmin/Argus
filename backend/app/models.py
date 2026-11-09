@@ -13,6 +13,7 @@ from sqlalchemy import (
     Integer,
     LargeBinary,
     String,
+    Text,
     Uuid,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -118,6 +119,9 @@ class CameraVendor(str, enum.Enum):
     # Hikvision device that registers to Argus by itself (ISUP 5.0); its
     # video arrives through the isup-bridge service, not from an address.
     isup = "isup"
+    # Camera or recorder in a Hik-Connect / EZVIZ account; its video comes
+    # from the vendor's cloud through the cloud-bridge service.
+    cloud = "cloud"
     # Kept for rows written before stage 2; treated like `rtsp`.
     other = "other"
 
@@ -147,6 +151,32 @@ class CredentialProfile(Base):
     name: Mapped[str] = mapped_column(String(200), unique=True)
     username: Mapped[str] = mapped_column(String(100), default="")
     password_enc: Mapped[str] = mapped_column(String(500), default="")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class CloudAccount(Base):
+    """A Hik-Connect or EZVIZ account whose cameras Argus shows.
+
+    The password is kept (encrypted) to log in again when the cloud ends
+    the session; the current session is kept too, so a restart of Argus
+    does not log in anew (each login shows up as a new phone to the owner).
+    """
+
+    __tablename__ = "cloud_accounts"
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
+    name: Mapped[str] = mapped_column(String(200), default="")
+    provider: Mapped[str] = mapped_column(String(16))  # "hik" | "ezviz"
+    login: Mapped[str] = mapped_column(String(200))
+    password_enc: Mapped[str] = mapped_column(String(500), default="")
+    # The account's own API server, learnt at login.
+    api_domain: Mapped[str] = mapped_column(String(120), default="")
+    # Identifies Argus to the cloud as one "phone", the same on every login.
+    feature_code: Mapped[str] = mapped_column(String(32), default="")
+    session_enc: Mapped[str] = mapped_column(Text, default="")
+    # Why the last login or device list failed ("" when fine).
+    error: Mapped[str] = mapped_column(String(64), default="")
+    checked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
 
@@ -183,6 +213,10 @@ class Device(Base):
     # ISUP devices: the Device ID set on the device. Its encryption key is
     # kept in password_enc.
     isup_id: Mapped[str | None] = mapped_column(String(64), unique=True)
+    # Cloud devices: the account they belong to; `serial` is the cloud serial.
+    cloud_account_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("cloud_accounts.id", ondelete="CASCADE"), index=True
+    )
 
     # None until the first status check.
     online: Mapped[bool | None] = mapped_column(Boolean)

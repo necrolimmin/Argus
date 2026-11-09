@@ -31,7 +31,7 @@ from app.config import get_settings
 from app.db import SessionLocal
 from app.models import Camera, CameraVendor, Device, DeviceKind, StreamQuality
 from app.security import decrypt_secret
-from app.services.streams import go2rtc, safe_register, stream_name
+from app.services.streams import has_video, live_streams, safe_register, stream_name
 
 log = logging.getLogger(__name__)
 
@@ -119,16 +119,6 @@ def want_lines(devices: list[Device], now: float, watched: dict[str, float], liv
     return sorted(lines)
 
 
-async def _live_streams() -> set[str]:
-    """go2rtc streams someone is watching right now."""
-    try:
-        r = await go2rtc().client.get("/api/streams")
-        r.raise_for_status()
-        return {name for name, s in (r.json() or {}).items() if (s or {}).get("consumers")}
-    except Exception:  # noqa: BLE001
-        return set()
-
-
 async def _add_cameras(dev: Device, info: dict) -> list[Camera]:
     chans = auto_channels(info)
     if chans is None:
@@ -196,7 +186,7 @@ async def sync_once() -> None:
             for name, at in list(_watched.items()):
                 if t - at > 3600:
                     del _watched[name]
-            want = "\n".join(want_lines(devices, t, _watched, await _live_streams()))
+            want = "\n".join(want_lines(devices, t, _watched, await live_streams()))
         if want != _last_want or t - _last_want_at > 30:
             await c.put("/want", content=want)
             _last_want, _last_want_at = want, t
@@ -215,16 +205,6 @@ async def run() -> None:
             pass
 
 
-async def _has_video(name: str) -> bool:
-    try:
-        r = await go2rtc().client.get("/api/streams", params={"src": name})
-        if r.status_code != 200:
-            return False
-        return any(p.get("medias") for p in (r.json() or {}).get("producers") or [])
-    except Exception:  # noqa: BLE001
-        return False
-
-
 async def touch(cam: Camera, quality: StreamQuality, wait: float = 6) -> None:
     """Someone is about to watch this stream: make sure the device is sending it.
 
@@ -233,11 +213,11 @@ async def touch(cam: Camera, quality: StreamQuality, wait: float = 6) -> None:
     """
     name = stream_name(cam.id, quality)
     _watched[name] = time.time()
-    if await _has_video(name):
+    if await has_video(name):
         return
     _kick.set()
     deadline = time.monotonic() + wait
     while time.monotonic() < deadline:
         await asyncio.sleep(0.25)
-        if await _has_video(name):
+        if await has_video(name):
             return

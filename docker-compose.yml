@@ -94,6 +94,19 @@ services:
       - "${ARGUS_ISUP_PORT:-17660}:${ARGUS_ISUP_PORT:-17660}/udp"
       - "${ARGUS_ISUP_VIDEO_PORT:-17661}:${ARGUS_ISUP_VIDEO_PORT:-17661}/tcp"
 
+  # Video of cameras added from Hik-Connect / EZVIZ accounts (cloud/README.md).
+  # No ports: it only talks to the backend, go2rtc and the vendor cloud.
+  cloud-bridge:
+    logging: *logging
+    build: ./cloud
+    restart: unless-stopped
+    depends_on:
+      - go2rtc
+    environment:
+      API_TOKEN: ${ARGUS_SERVICE_TOKEN}
+      RTSP_BASE: rtsp://go2rtc:8554
+      TZ: ${ARGUS_TIMEZONE:-Asia/Tashkent}
+
   recognizer:
     logging: *logging
     build: ./recognizer
