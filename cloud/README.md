@@ -38,6 +38,38 @@ docker compose logs -f cloud-bridge
 | `cloud session ended, renewing` | облако завершило сеанс; Argus сам войдёт заново |
 | `no sub stream, using the main one` | у камеры нет дополнительного потока в облаке, используется основной |
 
+## Запуск без Docker (на компьютере разработчика)
+
+Нужны Python 3.12 и `ffmpeg` в `PATH`. Сначала должны работать go2rtc и бэкенд.
+
+Один раз:
+
+```powershell
+cd D:\Project\Argus\cloud
+python -m venv .venv
+.\.venv\Scripts\pip install -r requirements.txt
+```
+
+В `backend\.env` должна быть строка, чтобы бэкенд искал мост на этом же компьютере:
+
+```
+ARGUS_CLOUD_BRIDGE_URL=http://127.0.0.1:8092
+```
+
+Каждый запуск (PowerShell):
+
+```powershell
+cd D:\Project\Argus\cloud
+$env:API_TOKEN = (Select-String -Path ..\backend\.env -Pattern '^ARGUS_SERVICE_TOKEN=(.*)$').Matches[0].Groups[1].Value
+$env:RTSP_BASE = "rtsp://127.0.0.1:8554"
+.\.venv\Scripts\python.exe bridge.py
+```
+
+Вторая строка читает токен из `backend\.env` сразу в переменную, на экран он не выводится.
+Токен должен совпадать с `ARGUS_SERVICE_TOKEN` бэкенда, иначе бэкенд не сможет говорить с мостом.
+При успешном старте в логе будет
+`cloud bridge ready: API 8092, publishing to rtsp://127.0.0.1:8554`.
+
 ## Безопасность
 
 - Пароль аккаунта хранится зашифрованным (тем же ключом, что и пароли камер) и
