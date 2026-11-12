@@ -1,5 +1,8 @@
 import { load, save } from "../lib/storage";
 import type {
+  ApiKey,
+  ApiKeyCreated,
+  ExtCamera,
   BulkResult,
   Camera,
   CameraSettings,
@@ -57,9 +60,13 @@ export class ApiError extends Error {
   }
 }
 
-async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
+/**
+ * `anonymous`: the request carries its own key (the embedded player), so the
+ * signed-in user is neither sent along nor signed out when it is refused.
+ */
+async function request<T>(path: string, init: RequestInit = {}, anonymous = false): Promise<T> {
   const headers = new Headers(init.headers);
-  if (token) headers.set("Authorization", `Bearer ${token}`);
+  if (token && !anonymous) headers.set("Authorization", `Bearer ${token}`);
   if (init.body && typeof init.body === "string" && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
   }
@@ -71,7 +78,7 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
     throw new ApiError(0, "network");
   }
 
-  if (res.status === 401 && token) {
+  if (res.status === 401 && token && !anonymous) {
     setToken(null);
     onUnauthorized();
   }
@@ -164,6 +171,22 @@ export const api = {
       body: sdp,
       headers: { "Content-Type": "application/sdp" },
     }),
+
+  // The embedded player: `access` is "key=…" or "t=…" from the page's address.
+  extCamera: (id: string, access: string) => request<ExtCamera>(`/api/ext/cameras/${id}?${access}`, {}, true),
+  extWebrtc: (id: string, quality: Quality, sdp: string, access: string) =>
+    request<string>(
+      `/api/ext/cameras/${id}/webrtc?quality=${quality}&${access}`,
+      { method: "POST", body: sdp, headers: { "Content-Type": "application/sdp" } },
+      true,
+    ),
+
+  apiKeys: () => request<ApiKey[]>("/api/api-keys"),
+  createApiKey: (body: { name: string; camera_ids: string[] }) =>
+    request<ApiKeyCreated>("/api/api-keys", json("POST", body)),
+  updateApiKey: (id: string, body: { name: string; camera_ids: string[] }) =>
+    request<ApiKey>(`/api/api-keys/${id}`, json("PUT", body)),
+  deleteApiKey: (id: string) => request<void>(`/api/api-keys/${id}`, { method: "DELETE" }),
 
   devices: () => request<Device[]>("/api/devices"),
   probeDevice: (body: Connection) => request<ProbeResult>("/api/devices/probe", json("POST", body)),

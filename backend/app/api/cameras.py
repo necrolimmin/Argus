@@ -43,6 +43,31 @@ async def _camera_in_scope(session, user, camera_id: uuid.UUID) -> Camera:
     return cam
 
 
+async def open_stream(cam: Camera, quality: StreamQuality) -> str:
+    """Wakes the camera's stream if it is opened on demand; returns its go2rtc name."""
+    if cam.device.vendor == CameraVendor.isup and isup.enabled():
+        await isup.touch(cam, quality)
+    elif cam.device.vendor == CameraVendor.cloud:
+        quality = playable_quality(cam, quality)
+        await cloud.touch(cam, quality)
+    return stream_name(cam.id, quality)
+
+
+async def answer_offer(cam: Camera, quality: StreamQuality, offer: str) -> str:
+    """go2rtc's SDP answer to a browser's offer for this camera."""
+    if not cam.enabled:
+        raise HTTPException(status.HTTP_409_CONFLICT, "camera_disabled")
+    name = await open_stream(cam, quality)
+    try:
+        try:
+            return await go2rtc().webrtc(name, offer)
+        except LookupError:
+            await go2rtc().register(cam)
+            return await go2rtc().webrtc(name, offer)
+    except (LookupError, Go2rtcError, httpx.HTTPError) as exc:
+        raise HTTPException(status.HTTP_502_BAD_GATEWAY, "stream_unavailable") from exc
+
+
 @router.get("", response_model=list[CameraOut])
 async def list_cameras(
     user: CurrentUser,
@@ -118,23 +143,7 @@ async def webrtc(
     """
     offer = (await request.body()).decode()
     cam = await _camera_in_scope(session, user, camera_id)
-    if not cam.enabled:
-        raise HTTPException(status.HTTP_409_CONFLICT, "camera_disabled")
-    if cam.device.vendor == CameraVendor.isup and isup.enabled():
-        await isup.touch(cam, quality)
-    elif cam.device.vendor == CameraVendor.cloud:
-        quality = playable_quality(cam, quality)
-        await cloud.touch(cam, quality)
-    name = stream_name(cam.id, quality)
-    try:
-        try:
-            answer = await go2rtc().webrtc(name, offer)
-        except LookupError:
-            await go2rtc().register(cam)
-            answer = await go2rtc().webrtc(name, offer)
-    except (LookupError, Go2rtcError, httpx.HTTPError) as exc:
-        raise HTTPException(status.HTTP_502_BAD_GATEWAY, "stream_unavailable") from exc
-    return Response(answer, media_type="application/sdp")
+    return Response(await answer_offer(cam, quality, offer), media_type="application/sdp")
 
 
 @router.websocket("/{camera_id}/mse")
@@ -153,13 +162,14 @@ async def mse(ws: WebSocket, camera_id: uuid.UUID, token: str = "", quality: Str
         await ws.close(code=status.WS_1008_POLICY_VIOLATION)
         return
 
+    await relay_mse(ws, cam, quality)
+
+
+async def relay_mse(ws: WebSocket, cam: Camera, quality: StreamQuality) -> None:
+    """Accepts the socket and pipes go2rtc's MSE stream through it until either side leaves."""
+    camera_id = cam.id
     await ws.accept()
-    if cam.device.vendor == CameraVendor.isup and isup.enabled():
-        await isup.touch(cam, quality)
-    elif cam.device.vendor == CameraVendor.cloud:
-        quality = playable_quality(cam, quality)
-        await cloud.touch(cam, quality)
-    name = stream_name(cam.id, quality)
+    name = await open_stream(cam, quality)
     try:
         await go2rtc().ensure(cam, name)
         async with ws_connect(go2rtc().ws_url(name), max_size=None) as upstream:

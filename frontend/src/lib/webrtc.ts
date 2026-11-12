@@ -20,6 +20,14 @@ const MSE_CODECS = ["avc1.640029", "avc1.64002A", "avc1.640033", "hvc1.1.6.L153.
 // (changing the grid, paging) does not repeat a failed WebRTC attempt.
 const preferred = new Map<string, Transport>();
 
+// Set by the embedded player: video is asked for with an API key or a link
+// ("key=…" or "t=…") instead of the signed-in user's login.
+let external = "";
+
+export function setExternalAccess(access: string) {
+  external = access;
+}
+
 function waitForIce(pc: RTCPeerConnection, ms: number): Promise<void> {
   if (pc.iceGatheringState === "complete") return Promise.resolve();
   return new Promise((resolve) => {
@@ -49,7 +57,8 @@ function startWebrtc(cameraId: string, quality: Quality, video: HTMLVideoElement
     try {
       await pc.setLocalDescription(await pc.createOffer());
       await waitForIce(pc, 1500);
-      const answer = await api.webrtc(cameraId, quality, pc.localDescription!.sdp);
+      const sdp = pc.localDescription!.sdp;
+      const answer = external ? await api.extWebrtc(cameraId, quality, sdp, external) : await api.webrtc(cameraId, quality, sdp);
       if (!stopped) await pc.setRemoteDescription({ type: "answer", sdp: answer });
     } catch {
       if (!stopped) fail();
@@ -110,7 +119,9 @@ function startMse(cameraId: string, quality: Quality, video: HTMLVideoElement, f
 
   const proto = location.protocol === "https:" ? "wss" : "ws";
   const ws = new WebSocket(
-    `${proto}://${location.host}/api/cameras/${cameraId}/mse?quality=${quality}&token=${encodeURIComponent(getToken() ?? "")}`,
+    external
+      ? `${proto}://${location.host}/api/ext/cameras/${cameraId}/mse?quality=${quality}&${external}`
+      : `${proto}://${location.host}/api/cameras/${cameraId}/mse?quality=${quality}&token=${encodeURIComponent(getToken() ?? "")}`,
   );
   ws.binaryType = "arraybuffer";
   ws.onopen = () => ws.send(JSON.stringify({ type: "mse", value: codecs }));

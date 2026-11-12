@@ -5,7 +5,7 @@ from fastapi import APIRouter, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 
-from app.api import auth, cameras, cloud, credentials, devices, employee_import, employees, events, internal, media, org, scan, users, ws
+from app.api import api_keys, auth, cameras, cloud, credentials, devices, employee_import, employees, events, ext, internal, media, org, scan, users, ws
 from app.config import get_settings
 from app.services.maintenance import ensure_admin, start_background_jobs
 from app.services.streams import close_go2rtc
@@ -34,6 +34,7 @@ def create_app(background_jobs: bool = True) -> FastAPI:
     )
     app.state.background_jobs = background_jobs
     app.add_middleware(GZipMiddleware, minimum_size=1024)
+    app.add_middleware(ext.OpenCors)
     origins = get_settings().cors_origins
     if origins:
         app.add_middleware(
@@ -41,7 +42,7 @@ def create_app(background_jobs: bool = True) -> FastAPI:
         )
 
     api = APIRouter(prefix="/api")
-    for module in (auth, users, org, devices, cloud, credentials, scan, cameras, employee_import, employees, events, ws, internal, media):
+    for module in (auth, users, org, devices, cloud, credentials, scan, cameras, employee_import, employees, events, ws, internal, media, api_keys, ext):
         api.include_router(module.router)
 
     @api.get("/health", tags=["health"])

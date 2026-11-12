@@ -16,10 +16,19 @@ export function GroupCheck({ state, onChange, label }: { state: "all" | "some" |
 }
 
 /**
- * The cameras a viewer may watch, grouped by unit as they are in the
+ * The cameras a viewer (or the holder of an API key) may watch, grouped by unit as they are in the
  * structure, so "everything at the warehouse" is one tick.
  */
-export function CameraAccess({ value, onChange }: { value: string[]; onChange: (ids: string[]) => void }) {
+export function CameraAccess({
+  value,
+  onChange,
+  emptyHint,
+}: {
+  value: string[];
+  onChange: (ids: string[]) => void;
+  /** What an empty choice means here; by default, what it means for a viewer. */
+  emptyHint?: string;
+}) {
   const { t } = useTranslation();
   const { data: cameras = [], isSuccess } = useCameras(null);
   const { data: units = [] } = useUnits();
@@ -84,7 +93,7 @@ export function CameraAccess({ value, onChange }: { value: string[]; onChange: (
           );
         })}
       </div>
-      {value.length === 0 && <span className="hint">{t("users.camerasNone")}</span>}
+      {value.length === 0 && <span className="hint">{emptyHint ?? t("users.camerasNone")}</span>}
     </div>
   );
 }

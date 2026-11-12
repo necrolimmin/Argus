@@ -102,6 +102,42 @@ class UserCamera(Base):
     )
 
 
+class ApiKey(Base):
+    """A key given to another system so it can show some of the cameras.
+
+    Only a hash of the key is stored: it is shown once, when it is made.
+    """
+
+    __tablename__ = "api_keys"
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
+    name: Mapped[str] = mapped_column(String(200))
+    # The first characters of the key, to tell keys apart in the list.
+    prefix: Mapped[str] = mapped_column(String(16))
+    key_hash: Mapped[str] = mapped_column(String(64), unique=True, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    last_used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+    camera_links: Mapped[list["ApiKeyCamera"]] = relationship(
+        cascade="all, delete-orphan", lazy="selectin"
+    )
+
+    @property
+    def camera_ids(self) -> list[uuid.UUID]:
+        return [link.camera_id for link in self.camera_links]
+
+
+class ApiKeyCamera(Base):
+    """A camera the holder of a key may watch."""
+
+    __tablename__ = "api_key_cameras"
+
+    api_key_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("api_keys.id", ondelete="CASCADE"), primary_key=True)
+    camera_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("cameras.id", ondelete="CASCADE"), primary_key=True, index=True
+    )
+
+
 class CameraVendor(str, enum.Enum):
     """How Argus talks to a device: stream URL templates and probing."""
 

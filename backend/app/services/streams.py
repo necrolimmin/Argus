@@ -169,6 +169,15 @@ class Go2rtc:
             raise Go2rtcError(r.text[:200])
         return r.text
 
+    async def frame(self, name: str) -> bytes:
+        """The stream's current picture as a JPEG."""
+        r = await self.client.get("/api/frame.jpeg", params={"src": name}, timeout=15)
+        if r.status_code == 404:
+            raise LookupError(name)
+        if r.status_code >= 400 or not r.content:
+            raise Go2rtcError(r.text[:200])
+        return r.content
+
     async def sync(self, session: AsyncSession) -> None:
         """Make go2rtc's stream list match the database.
 

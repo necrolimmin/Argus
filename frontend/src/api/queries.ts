@@ -11,6 +11,7 @@ export const keys = {
   users: ["users"] as const,
   devices: ["devices"] as const,
   credentials: ["credentials"] as const,
+  apiKeys: ["api-keys"] as const,
 };
 
 export function useUnits() {

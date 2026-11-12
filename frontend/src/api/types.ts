@@ -93,6 +93,33 @@ export interface Device {
 
 export type CloudProvider = "hik" | "ezviz";
 
+/** A key another system uses to show some of the cameras. */
+export interface ApiKey {
+  id: string;
+  name: string;
+  /** The first characters of the key; the rest is known only to its holder. */
+  prefix: string;
+  camera_ids: string[];
+  created_at: string;
+  last_used_at: string | null;
+}
+
+/** The answer to creating a key: the only time the key itself is sent. */
+export interface ApiKeyCreated extends ApiKey {
+  key: string;
+}
+
+/** A camera as the holder of a key sees it. */
+export interface ExtCamera {
+  id: string;
+  name: string;
+  unit: string;
+  enabled: boolean;
+  online: boolean | null;
+  embed_path: string;
+  snapshot_path: string;
+}
+
 export interface CloudAccount {
   id: string;
   name: string;

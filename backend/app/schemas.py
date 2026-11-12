@@ -527,3 +527,44 @@ class EventOut(BaseModel):
     employee: EventEmployee | None
     # Unknown events that an admin turned into an employee.
     linked_employee_name: str = ""
+
+
+# --- keys for other systems -------------------------------------------------
+
+
+class ApiKeyIn(BaseModel):
+    name: str = Field(min_length=1, max_length=200)
+    camera_ids: list[uuid.UUID] = Field(default=[], max_length=5000)
+
+
+class ApiKeyOut(ORM):
+    id: uuid.UUID
+    name: str
+    prefix: str
+    camera_ids: list[uuid.UUID]
+    created_at: datetime
+    last_used_at: datetime | None
+
+
+class ApiKeyCreated(ApiKeyOut):
+    # The key itself: in the answer to its creation and nowhere else.
+    key: str = ""
+
+
+class ExtCamera(BaseModel):
+    """A camera as another system sees it: no address, no login."""
+
+    id: uuid.UUID
+    name: str
+    unit: str
+    enabled: bool
+    online: bool | None
+    # Paths on this server: the player to put in an <iframe>, and a still picture.
+    embed_path: str
+    snapshot_path: str
+
+
+class ExtLink(BaseModel):
+    token: str
+    embed_path: str
+    expires_at: datetime

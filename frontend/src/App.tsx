@@ -7,6 +7,7 @@ import { isViewer, useAuth, useWall } from "./lib/store";
 import { ApiPage } from "./pages/ApiPage";
 import { CamerasPage } from "./pages/CamerasPage";
 import { DevicesPage } from "./pages/DevicesPage";
+import { EmbedPage } from "./pages/EmbedPage";
 import { LoginPage } from "./pages/LoginPage";
 import { OrgPage } from "./pages/OrgPage";
 import { UsersPage } from "./pages/UsersPage";
@@ -18,6 +19,12 @@ const ComponentsPage = import.meta.env.DEV
   : null;
 
 export function App() {
+  // The player other sites put in a frame: no login, no menu.
+  if (window.location.pathname.startsWith("/embed/")) return <EmbedPage />;
+  return <Site />;
+}
+
+function Site() {
   const { user, setUser } = useAuth();
   const hydrateWall = useWall((s) => s.hydrate);
   const [checking, setChecking] = useState(() => !!getToken());
