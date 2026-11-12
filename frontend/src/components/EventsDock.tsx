@@ -10,6 +10,7 @@ import { isAdmin, useAuth } from "../lib/store";
 import { DirectionBadge } from "./DirectionBadge";
 import { EmployeeModal } from "./EmployeeModal";
 import { Thumb } from "./NoImage";
+import { PersonCard } from "./PersonCard";
 
 function time(iso: string) {
   return new Date(iso).toLocaleTimeString(intlLocale(), { hour: "2-digit", minute: "2-digit", second: "2-digit" });
@@ -32,6 +33,7 @@ export function EventsDock({ cameraIds, defaultUnitId }: Props) {
   const [collapsed, setCollapsed] = useState(false);
   const [zoom, setZoom] = useState<string | null>(null);
   const [adding, setAdding] = useState<FaceEvent | null>(null);
+  const [person, setPerson] = useState<FaceEvent | null>(null);
 
   const isEmpty = (kind: EventKind) => !feeds[kind].loading && feeds[kind].items.length === 0;
   const quiet = isEmpty("recognized") && isEmpty("unknown");
@@ -69,11 +71,17 @@ export function EventsDock({ cameraIds, defaultUnitId }: Props) {
           <div className="strip">
             {feed.items.map((e) =>
               kind === "recognized" ? (
+                // The whole card opens the person: who they are and this pass.
                 <figure key={e.id} className={`frame person${freshIds.has(e.id) ? " fresh" : ""}`} data-direction={e.direction}>
-                  <button className="frame-shot" onClick={() => setZoom(e.image_url)} aria-label={e.employee?.full_name ?? ""}>
+                  <button
+                    className="frame-shot"
+                    onClick={() => (e.employee ? setPerson(e) : setZoom(e.image_url))}
+                    aria-label={e.employee ? t("events.openPerson", { name: e.employee.full_name }) : ""}
+                    title={e.employee ? t("events.openPerson", { name: e.employee.full_name }) : undefined}
+                  >
                     <Thumb src={e.face_url || e.image_url} compact />
                   </button>
-                  <figcaption>
+                  <figcaption onClick={() => e.employee && setPerson(e)}>
                     <span className="frame-time num">{time(e.occurred_at)}</span>
                     <span className="frame-title">{e.employee?.full_name ?? "—"}</span>
                     <span className="frame-meta">
@@ -132,6 +140,7 @@ export function EventsDock({ cameraIds, defaultUnitId }: Props) {
           </div>,
           document.body,
         )}
+      {person && <PersonCard event={person} recent={feeds.recognized.items} onClose={() => setPerson(null)} />}
       {adding && (
         <EmployeeModal
           fromEvent={adding}

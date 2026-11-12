@@ -70,6 +70,8 @@ const uzLatn: Locale = {
   login: {
     tagline: "Videokuzatuv va yuz boʻyicha oʻtishlar hisobi",
     myth: "Argus — afsonadagi yuz koʻzli qoʻriqchi: uning koʻzlari hech qachon birdaniga uxlamaydi.",
+    showPassword: "Parolni koʻrsatish",
+    hidePassword: "Parolni yashirish",
     point1: "Har qanday ishlab chiqaruvchining kameralari bitta devorda",
     point2: "Kirish va chiqishda xodimlarni taniydi",
     point3: "Sizning tarmogʻingizda ishlaydi, bulutsiz",
@@ -127,6 +129,15 @@ const uzLatn: Locale = {
     show: "Hodisalarni koʻrsatish",
     live: "Yangi hodisalar darhol chiqadi",
     reconnecting: "Qayta ulanmoqda…",
+    person: "Tanib olingan xodim",
+    openPerson: "{{name}}: maʼlumotlarni ochish",
+    thisPass: "Ushbu oʻtish",
+    passTime: "Vaqt",
+    camera: "Kamera",
+    direction: "Yoʻnalish",
+    similarity: "Yuz oʻxshashligi",
+    frameShot: "Kamera kadri: kattalashtirish",
+    passes: "Koʻrsatilganlar orasida bu odamning oʻtishlari",
   },
   devices: {
     cloud: {

@@ -1,9 +1,9 @@
-import { Cctv, ScanFace, ShieldCheck } from "lucide-react";
+import { Eye, EyeOff, UserRound } from "lucide-react";
 import { type FormEvent, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { api, setToken } from "../api/client";
-import { ArgusEyes } from "../components/ArgusEyes";
+import { ArgusCameras } from "../components/ArgusCameras";
 import { Brand, LanguageSwitch, ThemeToggle } from "../components/Layout";
 import { errorText } from "../lib/errors";
 import { useAuth } from "../lib/store";
@@ -13,6 +13,7 @@ export function LoginPage() {
   const setUser = useAuth((s) => s.setUser);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [shown, setShown] = useState(false);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -31,60 +32,62 @@ export function LoginPage() {
     }
   };
 
+  const reveal = shown ? t("login.hidePassword") : t("login.showPassword");
+
   return (
     <div className="login">
-      {/* What Argus is, for someone who opens it for the first time: the
-          watchman's eyes above, the name and what it does below. */}
-      <aside className="login-stage">
-        <ArgusEyes />
-        <div className="login-intro">
-          <p className="login-word" aria-hidden>
-            Argus
-          </p>
-          <p className="login-tagline">{t("login.tagline")}</p>
-          <p className="login-myth">{t("login.myth")}</p>
-          <ul className="login-points">
-            <li>
-              <Cctv size={18} aria-hidden />
-              {t("login.point1")}
-            </li>
-            <li>
-              <ScanFace size={18} aria-hidden />
-              {t("login.point2")}
-            </li>
-            <li>
-              <ShieldCheck size={18} aria-hidden />
-              {t("login.point3")}
-            </li>
-          </ul>
-        </div>
-      </aside>
-      <div className="login-side">
-        <form className="login-card" onSubmit={submit}>
-          <Brand />
+      {/* A wall of cameras that turn to the pointer; the door is a pane of glass in front of it. */}
+      <ArgusCameras />
+      <form className="login-card" onSubmit={submit}>
+        <Brand />
+        <div className="login-head">
           <h1>{t("login.title")}</h1>
-          <label className="field">
-            <span>{t("login.username")}</span>
-            <input className="input" autoComplete="username" value={username} onChange={(e) => setUsername(e.target.value)} required autoFocus />
+          <p>{t("login.tagline")}</p>
+        </div>
+        <label className="login-field">
+          <span className="visually-hidden">{t("login.username")}</span>
+          <input
+            className="input"
+            autoComplete="username"
+            placeholder={t("login.username")}
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            required
+            autoFocus
+          />
+          <UserRound size={18} aria-hidden className="login-field-icon" />
+        </label>
+        <div className="login-field">
+          <label className="visually-hidden" htmlFor="login-password">
+            {t("login.password")}
           </label>
-          <label className="field">
-            <span>{t("login.password")}</span>
-            <input className="input" type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} required />
-          </label>
-          {error && (
-            <p className="form-error m-0" role="alert">
-              {error}
-            </p>
-          )}
-          <button className="btn btn-primary" type="submit" disabled={busy} aria-busy={busy}>
-            {t("login.submit")}
+          <input
+            id="login-password"
+            className="input"
+            type={shown ? "text" : "password"}
+            autoComplete="current-password"
+            placeholder={t("login.password")}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+          <button type="button" className="login-reveal" onClick={() => setShown((s) => !s)} aria-label={reveal} title={reveal} aria-pressed={shown}>
+            {shown ? <Eye size={18} /> : <EyeOff size={18} />}
           </button>
-          <div className="login-tools">
-            <LanguageSwitch />
-            <ThemeToggle />
-          </div>
-        </form>
-      </div>
+        </div>
+        {error && (
+          <p className="form-error m-0" role="alert">
+            {error}
+          </p>
+        )}
+        <button className="btn btn-primary" type="submit" disabled={busy} aria-busy={busy}>
+          {t("login.submit")}
+        </button>
+        <div className="login-tools">
+          <LanguageSwitch />
+          <ThemeToggle />
+        </div>
+      </form>
     </div>
   );
 }

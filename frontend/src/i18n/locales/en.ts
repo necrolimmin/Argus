@@ -70,6 +70,8 @@ const en: Locale = {
   login: {
     tagline: "Video surveillance and face-based access log",
     myth: "Argus is the hundred-eyed watchman of the myth: his eyes never all sleep at once.",
+    showPassword: "Show password",
+    hidePassword: "Hide password",
     point1: "Cameras of any make on one wall",
     point2: "Recognises staff at entrances and exits",
     point3: "Runs in your own network, no cloud",
@@ -127,6 +129,15 @@ const en: Locale = {
     show: "Show events",
     live: "New events appear instantly",
     reconnecting: "Reconnecting…",
+    person: "Recognized employee",
+    openPerson: "{{name}}: open details",
+    thisPass: "This pass",
+    passTime: "Time",
+    camera: "Camera",
+    direction: "Direction",
+    similarity: "Face similarity",
+    frameShot: "Camera frame: enlarge",
+    passes: "This person's passes among those shown",
   },
   devices: {
     cloud: {

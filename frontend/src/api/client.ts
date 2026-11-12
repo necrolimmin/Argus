@@ -241,6 +241,7 @@ export const api = {
 
   employees: (params: { org_unit_id?: string | null; q?: string; active?: boolean; offset?: number; limit?: number }) =>
     request<{ items: Employee[]; total: number }>(`/api/employees${query(params)}`),
+  employee: (id: string) => request<Employee>(`/api/employees/${id}`),
   createEmployee: (body: EmployeeInput) => request<Employee>("/api/employees", json("POST", body)),
   updateEmployee: (id: string, body: EmployeeInput) => request<Employee>(`/api/employees/${id}`, json("PUT", body)),
   deleteEmployee: (id: string) => request<void>(`/api/employees/${id}`, { method: "DELETE" }),
