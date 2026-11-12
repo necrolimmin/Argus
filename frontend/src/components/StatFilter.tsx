@@ -21,6 +21,8 @@ interface Props<K extends string> {
  * 5 online, 1 offline". Pressing one shows only those rows.
  */
 export function StatFilter<K extends string>({ stats, value, onChange, label }: Props<K>) {
+  // The widest figure is the whole; the bar under each shows its share of it.
+  const whole = Math.max(1, ...stats.map((s) => s.count));
   return (
     <div className="stat-filter" role="group" aria-label={label}>
       {stats.map((s) => (
@@ -36,6 +38,9 @@ export function StatFilter<K extends string>({ stats, value, onChange, label }: 
           <span className="stat-label">
             {s.dot && <i className={`dot ${s.dot}`} aria-hidden />}
             {s.label}
+          </span>
+          <span className={`stat-share${s.dot ? ` ${s.dot}` : ""}`} aria-hidden>
+            <i style={{ width: `${(s.count / whole) * 100}%` }} />
           </span>
         </button>
       ))}

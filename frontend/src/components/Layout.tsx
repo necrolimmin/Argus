@@ -16,7 +16,7 @@ import {
   Sun,
   Users,
 } from "lucide-react";
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 
@@ -26,16 +26,27 @@ import { isAdmin, isViewer, useAuth, useUi } from "../lib/store";
 import { PasswordModal } from "../pages/PasswordModal";
 
 /**
- * The Argus mark: the four corners of a camera viewfinder framing the lens.
- * The corners are the motif of the whole interface (camera tiles show them
- * on hover); the lens is the one amber spot.
+ * The Argus mark: the four corners of a camera viewfinder framing an eye of
+ * the peacock's feather (Argus's hundred eyes ended up on its tail): a gold
+ * ring, then teal, then deep blue. The corners are the motif of the whole
+ * interface; camera tiles show them on hover.
  */
 export function Logo({ size = 24 }: { size?: number }) {
+  const id = `eye${useId().replace(/:/g, "")}`;
   return (
     <svg className="logo" width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden>
+      <defs>
+        <radialGradient id={id}>
+          <stop offset="0" stopColor="#141a5e" />
+          <stop offset="0.36" stopColor="#2a4fd0" />
+          <stop offset="0.62" stopColor="#22d3b7" />
+          <stop offset="0.86" stopColor="#f2b347" />
+          <stop offset="1" stopColor="#e9a130" />
+        </radialGradient>
+      </defs>
       <path className="logo-frame" d="M2 8V3.5C2 2.67 2.67 2 3.5 2H8M16 2h4.5c.83 0 1.5.67 1.5 1.5V8M22 16v4.5c0 .83-.67 1.5-1.5 1.5H16M8 22H3.5C2.67 22 2 21.33 2 20.5V16" strokeWidth="2.2" strokeLinecap="round" />
-      <circle className="logo-lens" cx="12" cy="12" r="4.6" />
-      <circle className="logo-glint" cx="13.6" cy="10.4" r="1.25" />
+      <circle className="logo-lens" cx="12" cy="12" r="5.2" style={{ fill: `url(#${id})` }} />
+      <circle className="logo-glint" cx="13.7" cy="10.3" r="1.05" />
     </svg>
   );
 }

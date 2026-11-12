@@ -1,62 +1,89 @@
 /*
- * Argus tokens, as docs/DESIGN.md defines them: a control-room desk read for
- * hours. Neutral greys with no blue cast; surfaces differ by tone, not by
- * borders. Amber is the primary action and the active nav item, nothing else.
+ * Argus tokens. Argus Panoptes is the hundred-eyed watchman of the myth; his
+ * eyes ended up on the peacock's tail. The palette is that feather: night
+ * blue-green for the room, the iris (teal to blue to violet) for where you
+ * are and what is selected, the gold ring for the one main action.
+ * Red and green stay what they were: a state to notice.
  */
 :root,
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --bg: #0f1012;
-  --surface-1: #16171a;
-  --surface-2: #1d1e22;
-  --surface-3: #26272c;
-  --segment-on: #303137;
-  --border: #2a2b30;
-  --border-strong: #3a3b41;
-  --text: #ececee;
-  --text-2: #a3a5ad;
-  --text-3: #8f9199;
-  --accent: #e8a33d;
-  --accent-hover: #f0b257;
-  --accent-ink: #1a1206;
-  --state-online: #4fae7c;
-  --state-offline: #e0605a;
-  --state-unknown: #8f9199;
-  --danger: #e0605a;
+  --bg: #091114;
+  --surface-1: #0e191d;
+  --surface-2: #14232a;
+  --surface-3: #1c3038;
+  --segment-on: #25404a;
+  --border: #1b2d34;
+  --border-strong: #2c4650;
+  --text: #e9f2f2;
+  --text-2: #a2b6ba;
+  --text-3: #8aa0a5;
+  --accent: #f2b347;
+  --accent-hover: #f8c466;
+  --accent-ink: #1c1304;
+  --gold-1: #f9cb6c;
+  --gold-2: #e9a130;
+  --iris-1: #22d3b7;
+  --iris-2: #3d8bff;
+  --iris-3: #8a6cff;
+  --iris-ink: #06181b;
+  --iris-text: #6fe3d0;
+  --state-online: #4fc587;
+  --state-offline: #f0655d;
+  --state-unknown: #8aa0a5;
+  --danger: #f0655d;
   --danger-ink: #ffffff;
   --video: #000000;
-  --video-idle: #151515; /* a tile waiting for its picture */
+  --video-idle: #0c1518; /* a tile waiting for its picture */
   --on-video: #ffffff;
   --scrim: rgba(0, 0, 0, 0.62);
-  --overlay: rgba(0, 0, 0, 0.6);
-  --shadow-float: 0 8px 24px rgba(0, 0, 0, 0.4);
+  --overlay: rgba(3, 9, 11, 0.66);
+  --shadow-float: 0 18px 48px -12px rgba(0, 0, 0, 0.7), 0 2px 8px rgba(0, 0, 0, 0.35);
+  --glow-strength: 14%;
+  --sheen: rgba(255, 255, 255, 0.05);
 }
 
 :root[data-theme="light"] {
   color-scheme: light;
-  --bg: #f3f4f6;
+  --bg: #ecf2f2;
   --surface-1: #ffffff;
-  --surface-2: #f0f1f3;
-  --surface-3: #e5e6ea;
+  --surface-2: #edf3f3;
+  --surface-3: #dce7e8;
   --segment-on: #ffffff;
-  --border: #e2e3e7;
-  --border-strong: #c9cbd1;
-  --text: #16171a;
-  --text-2: #4f525b;
-  --text-3: #646772;
-  /* Variant A of DESIGN.md: white text 5.1:1, the button against the page 4.7:1. */
-  --accent: #9a6108;
-  --accent-hover: #87550a;
+  --border: #dbe5e6;
+  --border-strong: #b9c9cc;
+  --text: #0c1a1f;
+  --text-2: #40555b;
+  --text-3: #4f6368;
+  --accent: #99600a;
+  --accent-hover: #86540a;
   --accent-ink: #ffffff;
-  --state-online: #2f8558;
+  --gold-1: #a0660b;
+  --gold-2: #8d5807;
+  --iris-1: #077f75;
+  --iris-2: #2166d9;
+  --iris-3: #5f48dc;
+  --iris-ink: #ffffff;
+  --iris-text: #066a62;
+  --state-online: #24865a;
   --state-offline: #c0392b;
-  --state-unknown: #8a8d96;
+  --state-unknown: #7e9196;
   --danger: #c0392b;
-  --shadow-float: 0 8px 24px rgba(20, 22, 28, 0.12);
+  --video-idle: #151d20;
+  --overlay: rgba(12, 26, 31, 0.42);
+  --shadow-float: 0 18px 48px -14px rgba(12, 40, 48, 0.28), 0 2px 8px rgba(12, 40, 48, 0.08);
+  --glow-strength: 11%;
+  --sheen: rgba(255, 255, 255, 0.7);
 }
 
 :root {
+  /* The iris: where you are, what is selected, what has focus. */
+  --grad-iris: linear-gradient(110deg, var(--iris-1), var(--iris-2) 55%, var(--iris-3));
+  /* The gold ring: the main action of a screen. */
+  --grad-gold: linear-gradient(180deg, var(--gold-1), var(--gold-2));
+
   --font-sans: "Onest", system-ui, sans-serif;
+  --font-display: "Geologica Variable", "Onest", system-ui, sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, monospace;
 
   --fs-xs: 12px;
@@ -72,10 +99,10 @@
   --lh-xl: 26px;
   --lh-2xl: 30px;
 
-  --r-xs: 3px;
-  --r-sm: 6px;
-  --r-md: 8px;
-  --r-lg: 12px;
+  --r-xs: 4px;
+  --r-sm: 7px;
+  --r-md: 10px;
+  --r-lg: 14px;
 
   --sp-1: 4px;
   --sp-2: 8px;
