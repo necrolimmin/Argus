@@ -20,6 +20,11 @@ class Settings(BaseSettings):
     admin_username: str = "admin"
     admin_password: str = "admin"
 
+    # Sign-in: a picture of digits to type, and a pause after too many wrong passwords.
+    captcha_enabled: bool = True
+    login_max_failures: int = 10
+    login_lock_minutes: int = 10
+
     go2rtc_url: str = "http://go2rtc:1984"
     # How the recognizer reaches go2rtc's RTSP restream.
     go2rtc_rtsp_url: str = "rtsp://go2rtc:8554"

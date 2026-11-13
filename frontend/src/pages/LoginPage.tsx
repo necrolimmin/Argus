@@ -1,5 +1,5 @@
-import { Eye, EyeOff, UserRound } from "lucide-react";
-import { type FormEvent, useState } from "react";
+import { Eye, EyeOff, RefreshCw, UserRound } from "lucide-react";
+import { type FormEvent, useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { api, setToken } from "../api/client";
@@ -16,17 +16,37 @@ export function LoginPage() {
   const [shown, setShown] = useState(false);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  // The picture of digits; null until the server says whether it asks for one.
+  const [captcha, setCaptcha] = useState<{ id: string; image: string } | null>(null);
+  const [digits, setDigits] = useState("");
+
+  const newCaptcha = useCallback(async () => {
+    setDigits("");
+    try {
+      const c = await api.captcha();
+      setCaptcha(c.enabled ? { id: c.id, image: c.image } : null);
+    } catch (err) {
+      setCaptcha(null);
+      setError(errorText(t, err));
+    }
+  }, [t]);
+
+  useEffect(() => {
+    void newCaptcha();
+  }, [newCaptcha]);
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
     setBusy(true);
     setError("");
     try {
-      const res = await api.login(username.trim(), password);
+      const res = await api.login(username.trim(), password, captcha ? { id: captcha.id, answer: digits } : undefined);
       setToken(res.access_token);
       setUser(res.user);
     } catch (err) {
       setError(errorText(t, err));
+      // A picture is good for one try, right or wrong.
+      void newCaptcha();
     } finally {
       setBusy(false);
     }
@@ -75,6 +95,27 @@ export function LoginPage() {
             {shown ? <Eye size={18} /> : <EyeOff size={18} />}
           </button>
         </div>
+        {captcha && (
+          <div className="login-captcha">
+            <img src={`data:image/svg+xml;utf8,${encodeURIComponent(captcha.image)}`} alt="" />
+            <button type="button" className="login-captcha-new" onClick={() => void newCaptcha()} aria-label={t("login.captchaNew")} title={t("login.captchaNew")}>
+              <RefreshCw size={17} />
+            </button>
+            <label className="login-field">
+              <span className="visually-hidden">{t("login.captcha")}</span>
+              <input
+                className="input"
+                inputMode="numeric"
+                autoComplete="off"
+                maxLength={8}
+                placeholder={t("login.captcha")}
+                value={digits}
+                onChange={(e) => setDigits(e.target.value.replace(/D/g, ""))}
+                required
+              />
+            </label>
+          </div>
+        )}
         {error && (
           <p className="form-error m-0" role="alert">
             {error}

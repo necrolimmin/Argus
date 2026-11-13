@@ -125,8 +125,12 @@ function query(params: Record<string, unknown>): string {
 }
 
 export const api = {
-  login: (username: string, password: string) =>
-    request<{ access_token: string; user: User }>("/api/auth/login", json("POST", { username, password })),
+  captcha: () => request<{ enabled: boolean; id: string; image: string }>("/api/auth/captcha"),
+  login: (username: string, password: string, captcha?: { id: string; answer: string }) =>
+    request<{ access_token: string; user: User }>(
+      "/api/auth/login",
+      json("POST", { username, password, captcha_id: captcha?.id ?? "", captcha_answer: captcha?.answer ?? "" }),
+    ),
   me: () => request<User>("/api/auth/me"),
   changePassword: (current_password: string, new_password: string) =>
     request<void>("/api/auth/password", json("POST", { current_password, new_password })),

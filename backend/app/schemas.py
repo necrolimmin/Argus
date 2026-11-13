@@ -18,6 +18,15 @@ class ORM(BaseModel):
 class LoginIn(BaseModel):
     username: str
     password: str
+    captcha_id: str = ""
+    captcha_answer: str = ""
+
+
+class CaptchaOut(BaseModel):
+    enabled: bool
+    id: str = ""
+    # An SVG picture of the digits to type.
+    image: str = ""
 
 
 class UserOut(ORM):

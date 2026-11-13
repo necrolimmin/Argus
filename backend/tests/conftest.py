@@ -11,6 +11,8 @@ os.environ.update(
     ARGUS_MEDIA_DIR=str(_tmp / "media"),
     ARGUS_ADMIN_PASSWORD="secret-admin",
     ARGUS_SERVICE_TOKEN="svc",
+    # Tests sign in without typing digits; test_login_guard turns the picture on.
+    ARGUS_CAPTCHA_ENABLED="0",
     # Nothing listens here, so go2rtc calls fail fast and are logged.
     ARGUS_GO2RTC_URL="http://127.0.0.1:9",
     ARGUS_RECOGNIZER_URL="http://127.0.0.1:9",
