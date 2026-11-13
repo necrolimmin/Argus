@@ -20,7 +20,19 @@ interface TileProps {
   dropTarget?: boolean;
   /** The big cell of the bento wall. */
   featured?: boolean;
+  /** Show the channel number: this camera is one of several on a recorder. */
+  channelTag?: boolean;
   style?: CSSProperties;
+}
+
+/** The channel number on its recorder: tells cameras with the same name apart. */
+export function ChannelTag({ channel }: { channel: number }) {
+  const { t } = useTranslation();
+  return (
+    <span className="chan-tag num" title={t("cameras.channelNo", { n: channel })}>
+      {channel}
+    </span>
+  );
 }
 
 /**
@@ -56,6 +68,7 @@ function TileBody({
   onDrop,
   dropTarget,
   featured,
+  channelTag,
   style,
   onRetry,
 }: TileProps & { onRetry: () => void }) {
@@ -119,6 +132,7 @@ function TileBody({
       <div className="hud">
         <span className="hud-chip">
           {status === "offline" && <span className="dot offline" aria-hidden />}
+          {channelTag && <ChannelTag channel={camera.channel} />}
           <span className="name">{camera.name}</span>
           {camera.face_recognition && <DirectionBadge direction={camera.direction} />}
         </span>
@@ -133,7 +147,7 @@ function TileBody({
 }
 
 /** Full-screen view of one camera on its main stream. */
-export function FullscreenCamera({ camera, onClose }: { camera: Camera; onClose: () => void }) {
+export function FullscreenCamera({ camera, channelTag, onClose }: { camera: Camera; channelTag?: boolean; onClose: () => void }) {
   const { t } = useTranslation();
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
@@ -144,7 +158,7 @@ export function FullscreenCamera({ camera, onClose }: { camera: Camera; onClose:
   return createPortal(
     <div className="fullscreen" role="dialog" aria-label={camera.name}>
       <div className="fill" onDoubleClick={onClose}>
-        <CameraTile camera={camera} quality="main" />
+        <CameraTile camera={camera} quality="main" channelTag={channelTag} />
       </div>
       <button className="icon-btn close" onClick={onClose} aria-label={t("common.close")}>
         <X size={20} />

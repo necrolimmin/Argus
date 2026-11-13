@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { ChevronLeft, ChevronRight, Footprints, ScanFace, Search } from "lucide-react";
+import { ChevronLeft, ChevronRight, Footprints, Pencil, ScanFace, Search } from "lucide-react";
 import { type CSSProperties, type DragEvent, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -7,7 +7,7 @@ import { api } from "../api/client";
 import { keys, useCameras, useUnits } from "../api/queries";
 import type { Camera } from "../api/types";
 import { GroupCheck } from "../components/CameraAccess";
-import { CameraTile, FullscreenCamera } from "../components/CameraTile";
+import { CameraTile, ChannelTag, FullscreenCamera } from "../components/CameraTile";
 import { DirectionBadge } from "../components/DirectionBadge";
 import { EventsDock } from "../components/EventsDock";
 import { Logo } from "../components/Layout";
@@ -15,6 +15,7 @@ import { Patrol } from "../components/Patrol";
 import { UnitPicker } from "../components/UnitPicker";
 import { isAdmin, isViewer, type Layout, useAuth, useWall } from "../lib/store";
 import { unitPath } from "../lib/tree";
+import { CameraModal } from "./CameraModal";
 import { AUTO_MAX, bento, bentoCells, bestFit, compact, place, swap } from "../lib/wall";
 
 const LAYOUTS: Exclude<Layout, "auto">[] = [1, 4, 9, 16];
@@ -41,6 +42,7 @@ export function CamerasPage() {
   const all = useCameras(null);
   const [query, setQuery] = useState("");
   const [fullscreen, setFullscreen] = useState<Camera | null>(null);
+  const [editing, setEditing] = useState<Camera | null>(null);
   const [dropTarget, setDropTarget] = useState<number | null>(null);
   // The wall's free space, for fitting the automatic grid to it.
   const wallRef = useRef<HTMLDivElement>(null);
@@ -64,6 +66,14 @@ export function CamerasPage() {
 
   const unitNames = useMemo(() => new Map(units.map((u) => [u.id, u.name])), [units]);
   const byId = useMemo(() => new Map((all.data ?? []).map((c) => [c.id, c])), [all.data]);
+  // Devices with several channels (recorders): their cameras carry the channel number,
+  // the same one the Devices page lists them under.
+  const recorders = useMemo(() => {
+    const count = new Map<string, number>();
+    // Only an administrator renames cameras, so only they see the numbers.
+    if (admin) for (const c of all.data ?? []) count.set(c.device_id, (count.get(c.device_id) ?? 0) + 1);
+    return new Set([...count].filter(([, n]) => n > 1).map(([id]) => id));
+  }, [all.data, admin]);
 
   // Forget cameras that were deleted or are no longer visible to this user.
   useEffect(() => {
@@ -239,7 +249,10 @@ export function CamerasPage() {
                         onChange={() => wall.toggleCamera(c.id)}
                       />
                       <span className="cam-item-text">
-                        <span className="cam-item-name">{c.name}</span>
+                        <span className="cam-item-line">
+                          {recorders.has(c.device_id) && <ChannelTag channel={c.channel} />}
+                          <span className="cam-item-name">{c.name}</span>
+                        </span>
                         {dev ? (
                           <span className="cam-item-unit num">
                             {dev.name} · {dev.host}
@@ -256,6 +269,20 @@ export function CamerasPage() {
                         ) : (
                           <DirectionBadge direction={c.direction} iconOnly />
                         ))}
+                      {admin && (
+                        <button
+                          type="button"
+                          className="icon-btn sm cam-item-edit"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            setEditing(c);
+                          }}
+                          aria-label={t("common.edit")}
+                          title={t("common.edit")}
+                        >
+                          <Pencil size={14} />
+                        </button>
+                      )}
                     </label>
                   );
                 })}
@@ -353,6 +380,7 @@ export function CamerasPage() {
                     camera={c}
                     quality={cellCount === 1 || (featured && i === 0) ? "main" : "sub"}
                     featured={featured && i === 0}
+                    channelTag={recorders.has(c.device_id)}
                     style={cellStyle(i)}
                     onOpen={() => setFullscreen(c)}
                     dropTarget={dropTarget === i}
@@ -378,7 +406,10 @@ export function CamerasPage() {
         {!viewer && faceIds.length > 0 && <EventsDock cameraIds={faceIds} defaultUnitId={wall.unitId} />}
       </section>
 
-      {fullscreen && <FullscreenCamera camera={fullscreen} onClose={() => setFullscreen(null)} />}
+      {fullscreen && (
+        <FullscreenCamera camera={fullscreen} channelTag={recorders.has(fullscreen.device_id)} onClose={() => setFullscreen(null)} />
+      )}
+      {editing && <CameraModal camera={editing} onClose={() => setEditing(null)} />}
       {patrolFrom !== null && <Patrol cameras={selected} startAt={patrolFrom} onClose={() => setPatrolFrom(null)} />}
     </div>
   );

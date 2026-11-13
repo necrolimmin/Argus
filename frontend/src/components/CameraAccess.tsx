@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { useCameras, useUnits } from "../api/queries";
 import type { Camera } from "../api/types";
 import { unitPath } from "../lib/tree";
+import { ChannelTag } from "./CameraTile";
 
 /** A checkbox that also shows "some of these", for a group of items. */
 export function GroupCheck({ state, onChange, label }: { state: "all" | "some" | "none"; onChange: () => void; label: string }) {
@@ -34,6 +35,11 @@ export function CameraAccess({
   const { data: units = [] } = useUnits();
   const [query, setQuery] = useState("");
   const chosen = useMemo(() => new Set(value), [value]);
+  const recorders = useMemo(() => {
+    const count = new Map<string, number>();
+    for (const c of cameras) count.set(c.device_id, (count.get(c.device_id) ?? 0) + 1);
+    return new Set([...count].filter(([, n]) => n > 1).map(([id]) => id));
+  }, [cameras]);
 
   const groups = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -85,8 +91,8 @@ export function CameraAccess({
               {g.cams.map((c) => (
                 <label key={c.id} className={`access-cam${chosen.has(c.id) ? " on" : ""}`}>
                   <input type="checkbox" checked={chosen.has(c.id)} onChange={(e) => toggle([c.id], e.target.checked)} />
+                  {recorders.has(c.device_id) && <ChannelTag channel={c.channel} />}
                   <span>{c.name}</span>
-                  {c.channel > 1 && <span className="num muted">#{c.channel}</span>}
                 </label>
               ))}
             </section>

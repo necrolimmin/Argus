@@ -869,3 +869,53 @@ input[type="radio"],
     backdrop-filter: none;
   }
 }
+
+/* ------------------------------------------------------- channel number */
+
+/* The number a camera has on its recorder, the same one the Devices page
+   lists it under: it tells apart cameras that share a name. */
+.chan-tag {
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  min-width: 22px;
+  height: 18px;
+  padding: 0 5px;
+  border: 1px solid color-mix(in srgb, var(--iris-1) 36%, transparent);
+  border-radius: 5px;
+  background: color-mix(in srgb, var(--iris-1) 13%, transparent);
+  color: var(--iris-text);
+  font-size: 11px;
+  line-height: 1;
+  font-weight: 600;
+}
+
+.hud-chip .chan-tag {
+  border-color: transparent;
+  background: rgba(255, 255, 255, 0.2);
+  color: var(--on-video);
+}
+
+.cam-item-line {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+/* Rename without leaving the wall: shown for the row under the pointer or with focus. */
+.cam-item-edit {
+  flex: none;
+  opacity: 0;
+}
+
+.cam-item:hover .cam-item-edit,
+.cam-item-edit:focus-visible {
+  opacity: 1;
+}
+
+@media (hover: none) {
+  .cam-item-edit {
+    opacity: 1;
+  }
+}
